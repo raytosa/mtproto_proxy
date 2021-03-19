@@ -25,21 +25,25 @@
 new() ->
     #st{}.
 
--spec try_decode_packet(binary(), codec()) -> {ok, binary(), binary(), codec()}
+-spec try_decode_packet(binary(), codec()) -> {ok, binary(), binary(), codec()} %%%%%-----yhb  only for test
                                                   | {incomplete, codec()}.
 try_decode_packet(<<Flag, Len:24/unsigned-little-integer, Rest/binary>>,
                       #st{} = St) when Flag == 127; Flag == 255 ->
+    io:format("mtp_abridged      try_decode_packet`1 ~n"),
     Len1 = Len * 4,
     try_decode_packet_len(Len1, Rest, St);
 try_decode_packet(<<Len, Rest/binary>>,
                       #st{} = St) when Len >= 128 ->
+    io:format("mtp_abridged      try_decode_packet`2 ~n"),
     Len1 = (Len - 128) * 4,
     try_decode_packet_len(Len1, Rest, St);
 try_decode_packet(<<Len, Rest/binary>>,
                       #st{} = St) when Len < 127 ->
+    io:format("mtp_abridged      try_decode_packet`3 ~n"),
     Len1 = Len * 4,
     try_decode_packet_len(Len1, Rest, St);
 try_decode_packet(_, St) ->
+    io:format("mtp_abridged      try_decode_packet`4 ~n"),
     {incomplete, St}.
 
 try_decode_packet_len(Len, LenStripped, St) ->
@@ -53,7 +57,7 @@ try_decode_packet_len(Len, LenStripped, St) ->
     end.
 
 -spec encode_packet(iodata(), codec()) -> {iodata(), codec()}.
-encode_packet(Data, St) ->
+encode_packet(Data, St) ->      %%%%%-----yhb  only for test
     Size = iolist_size(Data),
     Len = Size div 4,
     Packet =

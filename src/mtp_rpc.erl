@@ -99,6 +99,7 @@ decode_packet(<<?RPC_SIMPLE_ACK, ConnId:64/signed-little, Confirm:4/binary>>) ->
 
 encode_packet({data, Msg}, {{ConnId, ClientAddr, ProxyTag}, ProxyAddr}) ->
     %% See mtproto/mtproto-proxy.c:forward_mtproto_packet
+    io:format("mtp_rpc encode_packet"),
     ((iolist_size(Msg) rem 4) == 0)
         orelse error({not_aligned, Msg}),
     Flags1 = (?FLAG_HAS_AD_TAG
