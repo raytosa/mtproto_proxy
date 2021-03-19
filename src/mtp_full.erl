@@ -33,19 +33,23 @@
 -opaque codec() :: #full_st{}.
 
 
-new() ->
+new() -> 
+  io:format("mtp_full      new 1 ~n"),
     new(0, 0, true).
 
-new(EncSeqNo, DecSeqNo, CheckCRC) ->
+new(EncSeqNo, DecSeqNo, CheckCRC) -> 
+  io:format("mtp_full      new 2 ~n"),
     #full_st{enc_seq_no = EncSeqNo,
              dec_seq_no = DecSeqNo,
              check_crc = CheckCRC}.
 
-try_decode_packet(<<4:32/little, Tail/binary>>, S) ->
+try_decode_packet(<<4:32/little, Tail/binary>>, S) -> 
+  io:format("mtp_full      try_decode_packet ~n"), 
     %% Skip padding
     try_decode_packet(Tail, S);
 try_decode_packet(<<Len:32/little, PktSeqNo:32/signed-little, Tail/binary>>,
-                  #full_st{dec_seq_no = SeqNo, check_crc = CheckCRC} = S) ->
+                  #full_st{dec_seq_no = SeqNo, check_crc = CheckCRC} = S) -> 
+  io:format("mtp_full      try_decode_packet ~n"), 
     ((Len rem byte_size(?PAD)) == 0)
         orelse error({wrong_alignement, Len}),
     ((?MIN_MSG_LEN =< Len) and (Len =< ?MAX_MSG_LEN))
@@ -68,15 +72,20 @@ try_decode_packet(<<Len:32/little, PktSeqNo:32/signed-little, Tail/binary>>,
         _ ->
             {incomplete, S}
     end;
-try_decode_packet(_, S) ->
+try_decode_packet(_, S) -> 
+  io:format("mtp_full      try_decode_packet ~n"),
     {incomplete, S}.
 
-trim_padding(<<4:32/little, Tail/binary>>) ->
+trim_padding(<<4:32/little, Tail/binary>>) -> 
+  io:format("mtp_full      trim_padding 1 ~n"),
     trim_padding(Tail);
-trim_padding(Bin) -> Bin.
+trim_padding(Bin) -> 
+  io:format("mtp_full      trim_padding 2 ~n"), 
+  Bin.
 
 
-encode_packet(Bin, #full_st{enc_seq_no = SeqNo} = S) ->
+encode_packet(Bin, #full_st{enc_seq_no = SeqNo} = S) -> 
+  io:format("mtp_full      encode_packet ~n"),
     BodySize = iolist_size(Bin),
     ((BodySize rem byte_size(?PAD)) == 0)
         orelse error({wrong_alignment, BodySize}),
@@ -92,7 +101,8 @@ encode_packet(Bin, #full_st{enc_seq_no = SeqNo} = S) ->
     Padding = lists:duplicate(NPaddings, ?PAD),
     {[FullMsg | Padding], S#full_st{enc_seq_no = SeqNo + 1}}.
 
-padding_size(Len) ->
+padding_size(Len) -> 
+  io:format("mtp_full      padding_size ~n"),
     %% XXX: is there a cleaner way?
     (?BLOCK_SIZE - (Len rem ?BLOCK_SIZE)) rem ?BLOCK_SIZE.
 
@@ -100,7 +110,8 @@ padding_size(Len) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-encode_nopadding_test() ->
+encode_nopadding_test() -> 
+  io:format("mtp_full      encode_nopadding_test ~n"),
     S = new(),
     {Enc, _S1} = encode_packet(<<1, 1, 1, 1>>, S),
     ?assertEqual(
@@ -110,7 +121,8 @@ encode_nopadding_test() ->
          22,39,175,160>>,
        iolist_to_binary(Enc)).
 
-encode_padding_test() ->
+encode_padding_test() -> 
+  io:format("mtp_full      encode_padding_test ~n"),
     S = new(),
     {Enc, _S1} = encode_packet(<<1,1,1,1,1,1,1,1>>, S),
     ?assertEqual(
@@ -120,7 +132,8 @@ encode_padding_test() ->
          4,0,0,0,4,0,0,0,4,0,0,0>>,             %padding
        iolist_to_binary(Enc)).
 
-encode_padding_seq_test() ->
+encode_padding_seq_test() -> 
+  io:format("mtp_full      encode_padding_seq_test ~n"),
     S = new(),
     {Enc1, S1} = encode_packet(binary:copy(<<9>>, 8), S),
     ?assertEqual(
@@ -139,12 +152,14 @@ encode_padding_seq_test() ->
          4,0,0,0,4,0,0,0,4,0,0,0>>,
        iolist_to_binary(Enc2)).
 
-decode_none_test() ->
+decode_none_test() -> 
+  io:format("mtp_full      decode_none_test ~n"),
     S = new(),
     ?assertEqual(
        {incomplete, S}, try_decode_packet(<<>>, S)).
 
-codec_test() ->
+codec_test() -> 
+  io:format("mtp_full      codec_test ~n"),
     %% Overhead is 12b per-packet
     S = new(),
     Packets = [
@@ -154,7 +169,7 @@ codec_test() ->
                binary:copy(<<2>>, 100)          %padded
               ],
     lists:foldl(
-      fun(B, S1) ->
+      fun(B, S1) -> 
               {Encoded, S2} = encode_packet(B, S1),
               BinEncoded = iolist_to_binary(Encoded),
               {ok, Decoded, <<>>, S3} = try_decode_packet(BinEncoded, S2),
@@ -162,7 +177,8 @@ codec_test() ->
               S3
       end, S, Packets).
 
-codec_stream_test() ->
+codec_stream_test() -> 
+  io:format("mtp_full      codec_stream_test ~n"),
     S = new(),
     Packets = [
                binary:copy(<<0>>, 4),           %non-padded
@@ -172,12 +188,12 @@ codec_stream_test() ->
               ],
     {Encoded, SS} =
         lists:foldl(
-          fun(B, {Enc1, S1}) ->
+          fun(B, {Enc1, S1}) -> 
                   {Enc2, S2} = encode_packet(B, S1),
                   {[Enc1 | Enc2], S2}
           end, {[], S}, Packets),
     lists:foldl(
-      fun(B, {Enc, S1}) ->
+      fun(B, {Enc, S1}) -> 
               {ok, Dec, Rest, S2} = try_decode_packet(Enc, S1),
               ?assertEqual(B, Dec),
               {Rest, S2}

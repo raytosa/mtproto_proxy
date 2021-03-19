@@ -63,21 +63,26 @@
 
 %% APIs
 
-start_link(Ref, _Socket, Transport, Opts) ->
+start_link(Ref, _Socket, Transport, Opts) ->  
+  io:format("mtp_handler      start_link ~n"),
     {ok, proc_lib:spawn_link(?MODULE, ranch_init, [{Ref, Transport, Opts}])}.
 
-keys_str() ->
+keys_str() -> 
+  io:format("mtp_handler      keys_str ~n"),
     [{Name, Port, hex(Secret)}
      || {Name, Port, Secret} <- application:get_env(?APP, ports, [])].
 
--spec send(pid(), mtp_rpc:packet()) -> ok.
-send(Upstream, Packet) ->
+-spec send(pid(), mtp_rpc:packet()) -> 
+  ok.
+send(Upstream, Packet) -> 
+  io:format("mtp_handler      send ~n"),
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
 
 %% Custom gen_server init
-ranch_init({Ref, Transport, Opts}) ->
+ranch_init({Ref, Transport, Opts}) -> 
+  io:format("mtp_handler      ranch_init ~n"),
     {ok, Socket} = ranch:handshake(Ref),
     case init({Socket, Transport, Opts}) of
         {ok, State} ->
@@ -99,7 +104,8 @@ ranch_init({Ref, Transport, Opts}) ->
             exit(normal)
     end.
 
-init({Socket, Transport, [Name, Secret, Tag]}) ->
+init({Socket, Transport, [Name, Secret, Tag]}) -> 
+  io:format("mtp_handler      init ~n"),
     mtp_metric:count_inc([?APP, in_connection, total], 1, #{labels => [Name]}),
     case Transport:peername(Socket) of
         {ok, {Ip, Port}} ->
@@ -130,11 +136,13 @@ init({Socket, Transport, [Name, Secret, Tag]}) ->
             {stop, error}
     end.
 
-handle_call(_Request, _From, State) ->
+handle_call(_Request, _From, State) -> 
+  io:format("mtp_handler      handle_call ~n"),
     Reply = ok,
     {reply, Reply, State}.
 
-handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off} = S) ->
+handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off} = S) -> 
+  io:format("mtp_handler      handle_cast 1 ~n"),
     %% telegram server -> proxy
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
@@ -143,6 +151,7 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off}
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
                    addr = {Ip, _}} = S) when Filter =/= off ->
+	io:format("mtp_handler      handle_cast 2 ~n"),			   
     %% telegram server -> proxy
     %% Server replied with server error; it might be another kind of replay attack;
     %% Don't send this packet to client so proxy won't be fingerprinted
@@ -155,6 +164,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
          on -> S
      end};
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filter} = S) when Filter =/= off ->
+	io:format("mtp_handler      handle_cast 3~n"),			
     %% telegram server -> proxy
     %% Normal data packet
     %% srv_error_filter is 'on' or srv_error_filter is 'first' and it's 1st server packet
@@ -165,19 +175,23 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filt
              on -> S1
          end,
     maybe_check_health(bump_timer(S2));
-handle_cast({close_ext, Down}, #state{down = Down, sock = USock, transport = UTrans} = S) ->
+handle_cast({close_ext, Down}, #state{down = Down, sock = USock, transport = UTrans} = S) -> 
+  io:format("mtp_handler      handle_cast 4 ~n"),
     ?log(debug, "asked to close connection by downstream"),
     ok = UTrans:close(USock),
     {stop, normal, S#state{down = undefined}};
-handle_cast({simple_ack, Down, Confirm}, #state{down = Down} = S) ->
+handle_cast({simple_ack, Down, Confirm}, #state{down = Down} = S) -> 
+  io:format("mtp_handler      handle_cast 5 ~n"),
     ?log(info, "Simple ack: ~p, ~p", [Down, Confirm]),
     {noreply, S};
-handle_cast(Other, State) ->
+handle_cast(Other, State) -> 
+  io:format("mtp_handler      handle_cast 6 ~n"),
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, State}.
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
-                                      listener = Listener, addr = {Ip, _}} = S) ->
+                                      listener = Listener, addr = {Ip, _}} = S) -> 
+  io:format("mtp_handler      handle_info ~n"),
     %% client -> proxy
     Size = byte_size(Data),
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
@@ -192,14 +206,17 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
             ?log(warning, "~s: protocol_error ~p ~p", [inet:ntoa(Ip), Type, Extra]),
             {stop, normal, maybe_close_down(S)}
     end;
-handle_info({tcp_closed, Sock}, #state{sock = Sock} = S) ->
+handle_info({tcp_closed, Sock}, #state{sock = Sock} = S) -> 
+  io:format("mtp_handler      handle_info 1 ~n"),
     ?log(debug, "upstream sock closed"),
     {stop, normal, maybe_close_down(S)};
-handle_info({tcp_error, Sock, Reason}, #state{sock = Sock} = S) ->
+handle_info({tcp_error, Sock, Reason}, #state{sock = Sock} = S) -> 
+  io:format("mtp_handler      handle_info 2 ~n"),
     ?log(warning, "upstream sock error: ~p", [Reason]),
     {stop, normal, maybe_close_down(S)};
 
-handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = Listener} = S) ->
+handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = Listener} = S) -> 
+  io:format("mtp_handler      handle_info 3  ~n"),
     case gen_timeout:is_expired(Timer) of
         true when TState == stop;
                   TState == init ->
@@ -213,13 +230,15 @@ handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = List
             Timer1 = gen_timeout:reset(Timer),
             {noreply, S#state{timer = Timer1}}
     end;
-handle_info(Other, S) ->
+handle_info(Other, S) -> 
+  io:format("mtp_handler      handle_info 4 ~n"),
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, S}.
 
 terminate(_Reason, #state{started_at = Started, listener = Listener,
                           addr = {Ip, _}, policy_state = PolicyState,
-                          sock = Sock, transport = Trans} = S) ->
+                          sock = Sock, transport = Trans} = S) -> 
+  io:format("mtp_handler      terminate ~n"),
     case PolicyState of
         {ok, TlsDomain} ->
             try mtp_policy:dec(
@@ -242,15 +261,20 @@ terminate(_Reason, #state{started_at = Started, listener = Listener,
     ?log(info, "terminate ~p", [_Reason]),
     ok.
 
-code_change(_OldVsn, State, _Extra) ->
+code_change(_OldVsn, State, _Extra) -> 
+  io:format("mtp_handler      code_change ~n"),
     {ok, State}.
 
-maybe_close_down(#state{down = undefined} = S) -> S;
-maybe_close_down(#state{dc_id = {_DcId, Pool}} = S) ->
+maybe_close_down(#state{down = undefined} = S) -> 
+  io:format("mtp_handler      maybe_close_down1 ~n"),
+  S;
+maybe_close_down(#state{dc_id = {_DcId, Pool}} = S) -> 
+  io:format("mtp_handler      maybe_close_down2 ~n"),
     mtp_dc_pool:return(Pool, self()),
     S#state{down = undefined}.
 
-bump_timer(#state{timer = Timer, timer_state = TState} = S) ->
+bump_timer(#state{timer = Timer, timer_state = TState} = S) -> 
+  io:format("mtp_handler      bump_timer ~n"),
     Timer1 = gen_timeout:bump(Timer),
     case TState of
         stop ->
@@ -259,9 +283,11 @@ bump_timer(#state{timer = Timer, timer_state = TState} = S) ->
             S#state{timer = Timer1}
     end.
 
-switch_timer(#state{timer_state = TState} = S, TState) ->
+switch_timer(#state{timer_state = TState} = S, TState) -> 
+  io:format("mtp_handler      switch_timer1 ~n"),
     S;
-switch_timer(#state{timer_state = FromState, timer = Timer, listener = Listener} = S, ToState) ->
+switch_timer(#state{timer_state = FromState, timer = Timer, listener = Listener} = S, ToState) -> 
+  io:format("mtp_handler      switch_timer 2 ~n"),
     mtp_metric:count_inc([?APP, timer_switch, total], 1,
                      #{labels => [Listener, FromState, ToState]}),
     {NewTimeKey, NewTimeDefault} = state_timeout(ToState),
@@ -270,11 +296,14 @@ switch_timer(#state{timer_state = FromState, timer = Timer, listener = Listener}
     S#state{timer_state = ToState,
             timer = Timer1}.
 
-state_timeout(init) ->
+state_timeout(init) -> 
+  io:format("mtp_handler      state_timeout 1 ~n"),
     {init_timeout_sec, 60};
-state_timeout(hibernate) ->
+state_timeout(hibernate) -> 
+  io:format("mtp_handler      state_timeout 2 ~n"),
     {hibernate_timeout_sec, 60};
-state_timeout(stop) ->
+state_timeout(stop) -> 
+  io:format("mtp_handler      state_timeout 3 ~n"),
     {ready_timeout_sec, 1200}.
 
 
@@ -282,10 +311,11 @@ state_timeout(stop) ->
 
 %% Handle telegram client -> proxy stream
 handle_upstream_data(Bin, #state{stage = tunnel,
-                                  codec = UpCodec} = S) ->
+                                  codec = UpCodec} = S) -> 
+  io:format("mtp_handler      handle_upstream_data ~n"),					  
     {ok, S3, UpCodec1} =
         mtp_codec:fold_packets(
-          fun(Decoded, S1, Codec1) ->
+          fun(Decoded, S1, Codec1) -> 
                   mtp_metric:histogram_observe(
                     [?APP, tg_packet_size, bytes],
                     byte_size(Decoded),
@@ -294,10 +324,11 @@ handle_upstream_data(Bin, #state{stage = tunnel,
                   {S2, S2#state.codec}
           end, S, Bin, UpCodec),
     {ok, S3#state{codec = UpCodec1}};
-handle_upstream_data(Bin, #state{codec = Codec0} = S0) ->
+handle_upstream_data(Bin, #state{codec = Codec0} = S0) -> 
+  io:format("mtp_handler      handle_upstream_data 2 ~n"),
     {ok, S, Codec} =
         mtp_codec:fold_packets_if(
-          fun(Decoded, S1, Codec1) ->
+          fun(Decoded, S1, Codec1) -> 
                   case parse_upstream_data(Decoded, S1#state{codec = Codec1}) of
                       {ok, S2} ->
                           {next, S2, S2#state.codec};
@@ -311,7 +342,8 @@ handle_upstream_data(Bin, #state{codec = Codec0} = S0) ->
 parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
                      #state{stage = tls_hello, secret = Secret, codec = Codec0,
                             addr = {Ip, _}, listener = Listener} = S) when
-      byte_size(AllData) >= (?TLS_CLIENT_HELLO_LEN + 5) ->
+      byte_size(AllData) >= (?TLS_CLIENT_HELLO_LEN + 5) -> 
+  io:format("mtp_handler      parse_upstream_data 1 ~n"),
     assert_protocol(mtp_fake_tls),
     <<Data:(?TLS_CLIENT_HELLO_LEN + 5)/binary, Tail/binary>> = AllData,
     {ok, Response, Meta, TlsCodec} = mtp_fake_tls:from_client_hello(Data, Secret),
@@ -321,12 +353,14 @@ parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
     ok = up_send_raw(Response, S),        %FIXME: if this send fail, we will get counter policy leak
     {ok, S#state{codec = Codec, stage = init,
                  policy_state = {ok, maps:get(sni_domain, Meta, undefined)}}};
-parse_upstream_data(<<?TLS_START, _/binary>> = Data, #state{stage = init} = S) ->
+parse_upstream_data(<<?TLS_START, _/binary>> = Data, #state{stage = init} = S) -> 
+  io:format("mtp_handler      parse_upstream_data 2 ~n"),
     parse_upstream_data(Data, S#state{stage = tls_hello});
 parse_upstream_data(<<Header:64/binary, Rest/binary>>,
                      #state{stage = init, secret = Secret, listener = Listener, codec = Codec0,
                             ad_tag = Tag, addr = {Ip, _} = Addr, policy_state = PState0,
-                            sock = Sock, transport = Transport} = S) ->
+                            sock = Sock, transport = Transport} = S) -> 
+  io:format("mtp_handler      parse_upstream_data3 ~n"),
     {TlsHandshakeDone, _} = mtp_codec:info(tls, Codec0),
     AllowedProtocols = allowed_protocols(),
     %% If the only enabled protocol is fake-tls and tls handshake haven't been performed yet - raise
@@ -370,30 +404,39 @@ parse_upstream_data(<<Header:64/binary, Rest/binary>>,
                         policy_state = PState,
                         stage = tunnel},
                 hibernate));
-        {error, Reason} when is_atom(Reason) ->
+        {error, Reason} when is_atom(Reason) -> 
             mtp_metric:count_inc([?APP, protocol_error, total], 1, #{labels => [Listener, Reason]}),
             error({protocol_error, Reason, Header})
     end;
 parse_upstream_data(Bin, #state{stage = Stage, codec = Codec0} = S) when Stage =/= tunnel ->
+	io:format("mtp_handler      parse_upstream_data ~n"),
     Codec = mtp_codec:push_back(first, Bin, Codec0),
     {incomplete, S#state{codec = Codec}}.
 
 
-allowed_protocols() ->
+allowed_protocols() -> 
+  io:format("mtp_handler      allowed_protocols ~n"),
     {ok, AllowedProtocols} = application:get_env(?APP, allowed_protocols),
     AllowedProtocols.
 
-is_tls_only([mtp_fake_tls]) -> true;
-is_tls_only(_) -> false.
+is_tls_only([mtp_fake_tls]) -> 
+  io:format("mtp_handler      is_tls_only1 ~n"), 
+  true;
+is_tls_only(_) -> 
+  io:format("mtp_handler      is_tls_only2 ~n"), 
+  false.
 
-assert_protocol(Protocol) ->
+assert_protocol(Protocol) -> 
+  io:format("mtp_handler      assert_protocol1 ~n"),
     assert_protocol(Protocol, allowed_protocols()).
 
-assert_protocol(Protocol, AllowedProtocols) ->
+assert_protocol(Protocol, AllowedProtocols) -> 
+  io:format("mtp_handler      assert_protocol2 ~n"),
     lists:member(Protocol, AllowedProtocols)
         orelse error({protocol_error, disabled_protocol, Protocol}).
 
-maybe_check_replay(Packet) ->
+maybe_check_replay(Packet) -> 
+  io:format("mtp_handler      maybe_check_replay ~n"),
     %% Check for session replay attack: attempt to connect with the same 1st 64byte packet
     case application:get_env(?APP, replay_check_session_storage, off) of
         on ->
@@ -403,13 +446,16 @@ maybe_check_replay(Packet) ->
             ok
     end.
 
-check_tls_policy(Listener, Ip, #{sni_domain := TlsDomain}) ->
+check_tls_policy(Listener, Ip, #{sni_domain := TlsDomain}) -> 
+  io:format("mtp_handler      check_tls_policy1 ~n"),
     %% TODO validate timestamp!
     check_policy(Listener, Ip, TlsDomain);
-check_tls_policy(_, Ip, Meta) ->
+check_tls_policy(_, Ip, Meta) -> 
+  io:format("mtp_handler      check_tls_policy2 ~n"),
     error({protocol_error, tls_no_sni, {Ip, Meta}}).
 
-check_policy(Listener, Ip, Domain) ->
+check_policy(Listener, Ip, Domain) -> 
+  io:format("mtp_handler      check_policy ~n"),
     Rules = application:get_env(?APP, policy, []),
     case mtp_policy:check(Rules, Listener, Ip, Domain) of
         [] -> ok;
@@ -417,7 +463,8 @@ check_policy(Listener, Ip, Domain) ->
             error({protocol_error, policy_error, {Rule, Listener, Ip, Domain}})
     end.
 
-up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
+up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) -> 
+  io:format("mtp_handler      up_send ~n"),
     %% ?log(debug, ">Up: ~p", [Packet]),
     {Encoded, UpCodec1} = mtp_codec:encode_packet(Packet, UpCodec),
     ok = up_send_raw(Encoded, S),
@@ -425,9 +472,10 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
 
 up_send_raw(Data, #state{sock = Sock,
                          transport = Transport,
-                         listener = Listener} = S) ->
+                         listener = Listener} = S) -> 
+  io:format("mtp_handler      up_send_raw ~n"),
     mtp_metric:rt([?APP, upstream_send_duration, seconds],
-              fun() ->
+              fun() -> 
                       case Transport:send(Sock, Data) of
                           ok ->
                               mtp_metric:count_inc(
@@ -444,7 +492,8 @@ up_send_raw(Data, #state{sock = Sock,
                       end
               end, #{labels => [Listener]}).
 
-down_send(Packet, #state{down = Down} = S) ->
+down_send(Packet, #state{down = Down} = S) -> 
+  io:format("mtp_handler      down_send ~n"),
     %% ?log(debug, ">Down: ~p", [Packet]),
     case mtp_down_conn:send(Down, Packet) of
         ok ->
@@ -453,7 +502,8 @@ down_send(Packet, #state{down = Down} = S) ->
             handle_unknown_upstream(S)
     end.
 
-handle_unknown_upstream(#state{down = Down, sock = USock, transport = UTrans} = S) ->
+handle_unknown_upstream(#state{down = Down, sock = USock, transport = UTrans} = S) -> 
+  io:format("mtp_handler      handle_unknown_upstream ~n"),
     %% there might be a race-condition between packets from upstream socket and
     %% downstream's 'close_ext' message. Most likely because of slow up_send
     ok = UTrans:close(USock),
@@ -470,7 +520,8 @@ handle_unknown_upstream(#state{down = Down, sock = USock, transport = UTrans} = 
 
 
 %% @doc Terminate if message queue is too big
-maybe_check_health(#state{last_queue_check = LastCheck} = S) ->
+maybe_check_health(#state{last_queue_check = LastCheck} = S) -> 
+  io:format("mtp_handler      maybe_check_health ~n"),
     NowMs = erlang:system_time(millisecond),
     Delta = NowMs - LastCheck,
     case Delta < ?HEALTH_CHECK_INTERVAL of
@@ -488,7 +539,8 @@ maybe_check_health(#state{last_queue_check = LastCheck} = S) ->
 %% 1. If proc queue > qlen - stop
 %% 2. If proc total memory > gc - do GC and go to 3
 %% 3. If proc total memory > total_mem - stop
-check_health() ->
+check_health() -> 
+  io:format("mtp_handler      check_health ~n"),
     %% see .app.src
     Defaults = [{qlen, 300},
                 {gc, 409600},
@@ -497,11 +549,13 @@ check_health() ->
     do_check_health(Checks, calc_health()).
 
 do_check_health([{qlen, Limit} | _], #{message_queue_len := QLen} = Health) when QLen > Limit ->
+	 io:format("mtp_handler      do_check_health1 ~n"),
     mtp_metric:count_inc([?APP, healthcheck, total], 1,
                          #{labels => [message_queue_len]}),
     ?log(warning, "Upstream too large queue_len=~w, health=~p", [QLen, Health]),
     overflow;
 do_check_health([{gc, Limit} | Other], #{total_mem := TotalMem}) when TotalMem > Limit ->
+	 io:format("mtp_handler      do_check_health2 ~n"),
     %% Maybe it doesn't makes sense to do GC if queue len is more than, eg, 50?
     %% In this case allmost all memory will be in msg queue
     mtp_metric:count_inc([?APP, healthcheck, total], 1,
@@ -514,12 +568,15 @@ do_check_health([{total_mem, Limit} | _Other], #{total_mem := TotalMem} = Health
                          #{labels => [total_memory]}),
     ?log(warning, "Process too large total_mem=~p, health=~p", [TotalMem / 1024, Health]),
     overflow;
-do_check_health([_Ok | Other], Health) ->
+do_check_health([_Ok | Other], Health) -> 
+  io:format("mtp_handler      do_check_health ~n"),
     do_check_health(Other, Health);
-do_check_health([], _) ->
+do_check_health([], _) -> 
+  io:format("mtp_handler      do_check_health ~n"),
     ok.
 
-calc_health() ->
+calc_health() -> 
+  io:format("mtp_handler      calc_health ~n"),
     [{_, QLen}, {_, Mem}, {_, BinInfo}] =
         erlang:process_info(self(), [message_queue_len, memory, binary]),
     RefcBinSize = sum_binary(BinInfo),
@@ -530,12 +587,14 @@ calc_health() ->
       refc_bin_count => length(BinInfo),
       total_mem => TotalMem}.
 
-sum_binary(BinInfo) ->
-    trunc(lists:foldl(fun({_, Size, RefC}, Sum) ->
+sum_binary(BinInfo) -> 
+  io:format("mtp_handler      sum_binary ~n"),
+    trunc(lists:foldl(fun({_, Size, RefC}, Sum) -> 
                               Sum + (Size / RefC)
                       end, 0, BinInfo)).
 
-hex(Bin) ->
+hex(Bin) -> 
+  io:format("mtp_handler      hex ~n"),
     <<begin
          if N < 10 ->
                  <<($0 + N)>>;
@@ -544,7 +603,8 @@ hex(Bin) ->
          end
      end || <<N:4>> <= Bin>>.
 
-unhex(Chars) ->
+unhex(Chars) -> 
+  io:format("mtp_handler      unhex ~n"),
     UnHChar = fun(C) when C < $W -> C - $0;
                  (C) when C > $W -> C - $W
               end,

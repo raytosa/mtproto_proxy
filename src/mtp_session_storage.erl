@@ -39,17 +39,20 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
-start_link() ->
+start_link() -> 
+  io:format("mtp_session_storage     start_link ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% @doc Add secret to the storage. Returns `new' if it was never used and `used' if it was
 %% already used before.
--spec check_add(binary()) -> new | used.
+-spec check_add(binary()) ->
+  new | used.
 check_add(Packet) when byte_size(Packet) == 64 ->
     Now = erlang:system_time(second),
     check_add_at(Packet, Now).
 
-check_add_at(Packet, Now) ->
+check_add_at(Packet, Now) -> 
+  io:format("mtp_session_storage     check_add_at ~n"),
     Record = {fingerprint(Packet), Now},
     HistogramBucket = bucket(Now),
     ets:update_counter(?HISTOGRAM_TAB, HistogramBucket, 1, {HistogramBucket, 0}),
@@ -62,32 +65,36 @@ check_add_at(Packet, Now) ->
             used
     end.
 
--spec status() -> #{tab_size := non_neg_integer(),
+-spec status() ->
+  #{tab_size := non_neg_integer(),
                     tab_memory_kb := non_neg_integer(),
                     histogram_buckets := non_neg_integer(),
                     histogram_size := non_neg_integer(),
                     histogram_oldest := non_neg_integer()}.
-status() ->
+status() -> 
+  io:format("mtp_session_storage     status2 ~n"),
     gen_server:call(?MODULE, status).
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
-init([]) ->
+init([]) -> 
+  io:format("mtp_session_storage     init ~n"),
     {DataTab, HistTab} = new_storage(),
     Timer = gen_timeout:new(#{timeout => ?CHECK_INTERVAL}),
     {ok, #state{data_tab = DataTab,
                 histogram_tab = HistTab,
                 clean_timer = Timer}}.
 
-handle_call(status, _From, #state{data_tab = DataTid, histogram_tab = HistTid} = State) ->
+handle_call(status, _From, #state{data_tab = DataTid, histogram_tab = HistTid} = State) -> 
+  io:format("mtp_session_storage     handle_call ~n"),
     Now = erlang:system_time(second),
     Size = ets:info(DataTid, size),
     Memory = tab_memory(DataTid),
     MemoryKb = round(Memory / 1024),
     HistSize = ets:info(HistTid, size),
     {HistOldest, HistTotal} =
-        ets:foldl(fun({Bucket, Count}, {Oldest, Total}) ->
+        ets:foldl(fun({Bucket, Count}, {Oldest, Total}) -> 
                           {erlang:min(Oldest, bucket_to_ts(Bucket)), Total + Count}
                   end, {Now, 0}, HistTid),
     Status = #{tab_size => Size,
@@ -98,10 +105,12 @@ handle_call(status, _From, #state{data_tab = DataTid, histogram_tab = HistTid} =
                histogram_oldest_age => Now - HistOldest},
     {reply, Status, State}.
 
-handle_cast(_Msg, State) ->
+handle_cast(_Msg, State) -> 
+  io:format("mtp_session_storage     handle_cast ~n"),
     {noreply, State}.
 
-handle_info(timeout, #state{data_tab = DataTab, histogram_tab = HistTab, clean_timer = Timer0} = State) ->
+handle_info(timeout, #state{data_tab = DataTab, histogram_tab = HistTab, clean_timer = Timer0} = State) -> 
+  io:format("mtp_session_storage     handle_info ~n"),
     Timer =
         case gen_timeout:is_expired(Timer0) of
             true ->
@@ -116,42 +125,52 @@ handle_info(timeout, #state{data_tab = DataTab, histogram_tab = HistTab, clean_t
         end,
     {noreply, State#state{clean_timer = Timer}}.
 
-terminate(_Reason, _State) ->
+terminate(_Reason, _State) -> 
+  io:format("mtp_session_storage     terminate ~n"),
     ok.
 
-code_change(_OldVsn, State, _Extra) ->
+code_change(_OldVsn, State, _Extra) -> 
+  io:format("mtp_session_storage     code_change ~n"),
     {ok, State}.
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
-fingerprint(<<_:8/binary, KeyIV:(32 + 16)/binary, _:8/binary>>) ->
+fingerprint(<<_:8/binary, KeyIV:(32 + 16)/binary, _:8/binary>>) -> 
+  io:format("mtp_session_storage     fingerprint ~n"),
     %% It would be better to use whole 64b packet as fingerprint, but will use only
     %% 48b Key + IV part to save some space.
     binary:copy(KeyIV).
 
-bucket(Timestamp) ->
+bucket(Timestamp) -> 
+  io:format("mtp_session_storage     bucket ~n"),
     Timestamp div ?HISTOGRAM_BUCKET_SIZE.
 
-bucket_to_ts(BucketTime) ->
+bucket_to_ts(BucketTime) -> 
+  io:format("mtp_session_storage     bucket_to_ts ~n"),
     BucketTime * ?HISTOGRAM_BUCKET_SIZE.
 
-bucket_next(BucketTime) ->
+bucket_next(BucketTime) -> 
+  io:format("mtp_session_storage     bucket_next ~n"),
     BucketTime + 1.
 
 
-new_storage() ->
+new_storage() -> 
+  io:format("mtp_session_storage     new_storage ~n"),
     DataTab = ets:new(?DATA_TAB, [set, public, named_table, {write_concurrency, true}]),
     HistTab = ets:new(?HISTOGRAM_TAB, [set, public, named_table, {write_concurrency, true}]),
     {DataTab, HistTab}.
 
 
-clean_storage(DataTid, HistogramTid, CleanOpts) ->
-    lists:filtermap(fun(Check) -> do_clean(DataTid, HistogramTid, CleanOpts, Check) end,
+clean_storage(DataTid, HistogramTid, CleanOpts) -> 
+  io:format("mtp_session_storage     clean_storage ~n"),
+    lists:filtermap(fun(Check) -> 
+	do_clean(DataTid, HistogramTid, CleanOpts, Check) end,
                     [space, count, max_age]).
 
-do_clean(DataTid, HistTid, #{max_memory_mb := MaxMem}, space) ->
+do_clean(DataTid, HistTid, #{max_memory_mb := MaxMem}, space) -> 
+  io:format("mtp_session_storage     do_clean1 ~n"),
     TabMemBytes = tab_memory(DataTid),
     MaxMemBytes = MaxMem * 1024 * 1024,
     case TabMemBytes > MaxMemBytes of
@@ -162,7 +181,8 @@ do_clean(DataTid, HistTid, #{max_memory_mb := MaxMem}, space) ->
         false ->
             false
     end;
-do_clean(DataTid, HistTid, #{max_items := MaxItems}, count) ->
+do_clean(DataTid, HistTid, #{max_items := MaxItems}, count) -> 
+  io:format("mtp_session_storage     do_clean2 ~n"),
     Count = ets:info(DataTid, size),
     case Count > MaxItems of
         true ->
@@ -172,7 +192,8 @@ do_clean(DataTid, HistTid, #{max_items := MaxItems}, count) ->
         false ->
             false
     end;
-do_clean(DataTid, HistTid, #{max_age_minutes := MaxAge}, max_age) ->
+do_clean(DataTid, HistTid, #{max_age_minutes := MaxAge}, max_age) -> 
+  io:format("mtp_session_storage     do_clean3 ~n"),
     %% First scan histogram table, because it's cheaper
     CutBucket = bucket(erlang:system_time(second) - (MaxAge * 60)),
     HistMs = ets:fun2ms(fun({BucketTs, _}) when BucketTs =< CutBucket -> true end),
@@ -185,7 +206,8 @@ do_clean(DataTid, HistTid, #{max_age_minutes := MaxAge}, max_age) ->
     end.
 
 
-tab_memory(Tid) ->
+tab_memory(Tid) -> 
+  io:format("mtp_session_storage     tab_memory ~n"),
     WordSize = erlang:system_info(wordsize),
     Words = ets:info(Tid, memory),
     Words * WordSize.
@@ -200,9 +222,11 @@ shrink_percent(DataTid, HistTid, Percent) when Percent < 1,
 
 %% Find the timestamp such that if we remove buckets that are older than this timestamp then we
 %% will remove at least `ToRemove' items.
-find_cut_bucket([{BucketTime, _}], _, _) ->
+find_cut_bucket([{BucketTime, _}], _, _) -> 
+  io:format("mtp_session_storage     find_cut_bucket1 ~n"),
     BucketTime;
-find_cut_bucket([{BucketTime, Count} | Tail], ToRemove, Total) ->
+find_cut_bucket([{BucketTime, Count} | Tail], ToRemove, Total) -> 
+  io:format("mtp_session_storage     find_cut_bucket2 ~n"),
     NewTotal = Total + Count,
     case NewTotal >= ToRemove of
         true ->
@@ -213,8 +237,10 @@ find_cut_bucket([{BucketTime, Count} | Tail], ToRemove, Total) ->
 
 %% @doc remove records that are in CutBucketTime bucket or older.
 %% Returns number of removed data records.
--spec remove_older(integer(), ets:tid(), ets:tid()) -> non_neg_integer().
-remove_older(CutBucketTime, DataTid, HistTid) ->
+-spec remove_older(integer(), ets:tid(), ets:tid()) ->
+   non_neg_integer().
+remove_older(CutBucketTime, DataTid, HistTid) -> 
+  io:format("mtp_session_storage     remove_older2 ~n"),
     %%  | --- | --- | --- | --
     %%  ^ oldest bucket
     %%        ^ 2nd bucket

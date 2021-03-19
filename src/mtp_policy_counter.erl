@@ -32,10 +32,12 @@
 %%%===================================================================
 -spec increment(key()) -> integer().
 increment(Key) ->
+	io:format("mtp_policy_counter      increment ~n"),
     ets:update_counter(?TAB, Key, 1, {Key, 0}).
 
 -spec decrement(key()) -> integer().
 decrement(Key) ->
+	io:format("mtp_policy_counter      decrement ~n"),
     try ets:update_counter(?TAB, Key, -1) of
         New when New =< 0 ->
             ets:delete(?TAB, Key),
@@ -48,6 +50,7 @@ decrement(Key) ->
 
 -spec get(key()) -> non_neg_integer().
 get(Key) ->
+	io:format("mtp_policy_counter      get ~n"),
     case ets:lookup(?TAB, Key) of
         [] -> 0;
         [{_, V}] -> V
@@ -55,32 +58,40 @@ get(Key) ->
 
 %% @doc Clean all counters
 flush() ->
+	io:format("mtp_policy_counter      flush ~n"),
     gen_server:call(?MODULE, flush).
 
 start_link() ->
+	io:format("mtp_policy_counter      start_link ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 init([]) ->
+	io:format("mtp_policy_counter      init ~n"),
     Tab = ets:new(?TAB, [named_table, {write_concurrency, true}, public]),
     {ok, #state{tab = Tab}}.
 
 handle_call(flush, _From, #state{tab = Tab} = State) ->
+	io:format("mtp_policy_counter      handle_call ~n"),
     true = ets:delete_all_objects(Tab),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->
+	io:format("mtp_policy_counter      handle_cast ~n"),
     {noreply, State}.
 
 handle_info(_Info, State) ->
+	io:format("mtp_policy_counter      handle_info ~n"),
     {noreply, State}.
 
 terminate(_Reason, _State) ->
+	io:format("mtp_policy_counter      terminate ~n"),
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
+	io:format("mtp_policy_counter      code_change ~n"),
     {ok, State}.
 
 %%%===================================================================

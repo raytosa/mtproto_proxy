@@ -62,39 +62,48 @@
 %%% API
 %%%===================================================================
 start_link(DcId) ->
+    io:format("mtp_dc_pool      start_link`1 ~n"),
     gen_server:start_link({local, dc_to_pool_name(DcId)}, ?MODULE, DcId, []).
 
 valid_dc_id(DcId) ->
+    io:format("mtp_dc_pool      valid_dc_id`1 ~n"),
     is_integer(DcId) andalso
         -10 < DcId andalso
         10 > DcId.
 
 dc_to_pool_name(DcId)  ->
+    io:format("mtp_dc_pool      dc_to_pool_name`1 ~n"),
     valid_dc_id(DcId) orelse error(invalid_dc_id, [DcId]),
     binary_to_atom(<<"mtp_dc_pool_", (integer_to_binary(DcId))/binary>>, utf8).
 
 -spec get(pid(), upstream(), #{addr := mtp_config:netloc_v4v6(),
                                ad_tag => binary()}) -> downstream() | {error, atom()}.
 get(Pool, Upstream, #{addr := _} = Opts) ->
+    io:format("mtp_dc_pool      get`1 ~n"),
     gen_server:call(Pool, {get, Upstream, Opts}).
 
 return(Pool, Upstream) ->
+    io:format("mtp_dc_pool      return`1 ~n"),
     gen_server:cast(Pool, {return, Upstream}).
 
 add_connection(Pool) ->
+    io:format("mtp_dc_pool      add_connection`1 ~n"),
     gen_server:call(Pool, add_connection, 10000).
 
 ack_connected(Pool, Downstream) ->
+    io:format("mtp_dc_pool      ack_connected`1 ~n"),
     gen_server:cast(Pool, {connected, Downstream}).
 
 -spec status(pid()) -> status().
 status(Pool) ->
+    io:format("mtp_dc_pool      status`1 ~n"),
     gen_server:call(Pool, status).
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 init(DcId) ->
+    io:format("mtp_dc_pool      init`1 ~n"),
     InitConnections = application:get_env(?APP, init_dc_connections, ?DEFAULT_INIT_CONNS),
     State = #state{dc_id = DcId,
                    downstreams = ds_new([])},
@@ -103,6 +112,7 @@ init(DcId) ->
     {ok, State2}.
 
 handle_call({get, Upstream, Opts}, _From, State) ->
+    io:format("mtp_dc_pool      handle_call`1 ~n"),
     case handle_get(Upstream, Opts, State) of
         {empty, State1} ->
             {reply, {error, empty}, State1};
@@ -110,11 +120,13 @@ handle_call({get, Upstream, Opts}, _From, State) ->
             {reply, Downstream, State1}
     end;
 handle_call(add_connection, _From, State) ->
+    io:format("mtp_dc_pool      handle_call`2 ~n"),
     State1 = connect(State),
     {reply, ok, State1};
 handle_call(status, _From, #state{downstreams = Ds,
                                   upstreams = Us,
                                   dc_id = DcId} = State) ->
+    io:format("mtp_dc_pool      handle_call`3 ~n"),
     {NDowns, NUps, Min, Max} =
         ds_fold(
           fun(_Pid, N, {NDowns, NUps, Min, Max}) ->
@@ -127,13 +139,17 @@ handle_call(status, _From, #state{downstreams = Ds,
               dc_id => DcId}, State}.
 
 handle_cast({return, Upstream}, State) ->
+    io:format("mtp_dc_pool      handle_cast`1 ~n"),
     {noreply, handle_return(Upstream, State)};
 handle_cast({connected, Pid}, State) ->
+    io:format("mtp_dc_pool      handle_cast`2 ~n"),
     {noreply, handle_connected(Pid, State)}.
 
 handle_info({'DOWN', MonitorRef, process, Pid, Reason}, State) ->
+    io:format("mtp_dc_pool      handle_info`1 ~n"),
     {noreply, handle_down(MonitorRef, Pid, Reason, State)}.
 terminate(_Reason, #state{downstreams = Ds}) ->
+    io:format("mtp_dc_pool      terminate`1 ~n"),
     ds_fold(
       fun(Pid, _, _) ->
               mtp_down_conn:shutdown(Pid)
@@ -141,6 +157,7 @@ terminate(_Reason, #state{downstreams = Ds}) ->
     %% upstreams will be killed by connection itself
     ok.
 code_change(_OldVsn, State, _Extra) ->
+    io:format("mtp_dc_pool      code_change`1 ~n"),
     {ok, State}.
 
 %%%===================================================================
@@ -150,6 +167,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% Handle async connection ack
 handle_connected(Pid, #state{pending_downstreams = Pending,
                              downstreams = Ds} = St) ->
+    io:format("mtp_dc_pool      handle_connected`1 ~n"),
     Pending1 = lists:delete(Pid, Pending),
     Downstreams1 = ds_add_downstream(Pid, Ds),
     St#state{pending_downstreams = Pending1,
@@ -157,6 +175,7 @@ handle_connected(Pid, #state{pending_downstreams = Pending,
 
 handle_get(Upstream, Opts, #state{downstreams = Ds,
                                   upstreams = Us} = St) ->
+    io:format("mtp_dc_pool      handle_get`1 ~n"),
     case ds_get(Ds) of
         {Downstream, N, Ds1} ->
             MonRef = erlang:monitor(process, Upstream),
@@ -172,6 +191,7 @@ handle_get(Upstream, Opts, #state{downstreams = Ds,
 
 handle_return(Upstream, #state{downstreams = Ds,
                                upstreams = Us} = St) ->
+    io:format("mtp_dc_pool      handle_return`1 ~n"),
     {{Downstream, MonRef}, Us1} = maps:take(Upstream, Us),
     ok = mtp_down_conn:upstream_closed(Downstream, Upstream),
     erlang:demonitor(MonRef, [flush]),
@@ -183,6 +203,7 @@ handle_down(MonRef, Pid, Reason, #state{downstreams = Ds,
                                         downstream_monitors = DsM,
                                         upstreams = Us,
                                         pending_downstreams = Pending} = St) ->
+    io:format("mtp_dc_pool      handle_down`1 ~n"),
     case maps:take(Pid, Us) of
         {{Downstream, MonRef}, Us1} ->
             ok = mtp_down_conn:upstream_closed(Downstream, Pid),
@@ -207,6 +228,7 @@ handle_down(MonRef, Pid, Reason, #state{downstreams = Ds,
 
 maybe_restart_connection(#state{pending_downstreams = Pending,
                                 downstream_monitors = DsM} = St) ->
+    io:format("mtp_dc_pool      maybe_restart_connection`1 ~n"),
     MinConnections = application:get_env(?APP, init_dc_connections, ?DEFAULT_INIT_CONNS),
     NumOpen = map_size(DsM),
     NumPending = length(Pending),
@@ -222,6 +244,7 @@ maybe_restart_connection(#state{pending_downstreams = Pending,
 
 
 maybe_spawn_connection(CurrentMin, #state{pending_downstreams = Pending} = St) ->
+    io:format("mtp_dc_pool      status`1 ~n"),
     %% if N > X and len(pending) < Y -> connect()
     %% TODO: shrinking (by timer)
     ToSpawn =
@@ -239,6 +262,7 @@ maybe_spawn_connection(CurrentMin, #state{pending_downstreams = Pending} = St) -
     connect_many(ToSpawn, St).
 
 connect_many(ToSpawn, St) ->
+    io:format("mtp_dc_pool      connect_many`1 ~n"),
     lists:foldl(
       fun(_, S) ->
               connect(S)
@@ -248,6 +272,7 @@ connect_many(ToSpawn, St) ->
 connect(#state{pending_downstreams = Pending,
                downstream_monitors = DsM,
                dc_id = DcId} = St) ->
+    io:format("mtp_dc_pool      connect`1 ~n"),
     Pid = do_connect(DcId),
     MonRef = erlang:monitor(process, Pid),
     St#state{pending_downstreams = [Pid | Pending],
@@ -255,12 +280,14 @@ connect(#state{pending_downstreams = Pending,
 
 %% Asynchronous connect
 do_connect(DcId) ->
+    io:format("mtp_dc_pool      do_connect`1 ~n"),
     {ok, Pid} = mtp_down_conn_sup:start_conn(self(), DcId),
     Pid.
 
 %% Block until all async connections are acked
 wait_pending(#state{pending_downstreams = Pending,
                     downstream_monitors = DsM} = St) ->
+    io:format("mtp_dc_pool      wait_pending`1 ~n"),
     lists:foldl(
       fun(Pid, #state{pending_downstreams = [Pid | Remaining],
                       downstreams = Ds} = St1) ->
@@ -282,6 +309,7 @@ wait_pending(#state{pending_downstreams = Pending,
 %% New downstream connection storage
 -spec ds_new([downstream()]) -> ds_store().
 ds_new(Connections) ->
+    io:format("mtp_dc_pool      ds_new`1 ~n"),
     Psq = pid_psq:new(),
     %% TODO: add `from_list` function
     lists:foldl(
@@ -292,6 +320,7 @@ ds_new(Connections) ->
 -spec ds_fold(fun( (downstream(), integer(), Acc) -> Acc ), Acc, ds_store()) -> Acc when
       Acc :: any().
 ds_fold(Fun, Acc0, St) ->
+    io:format("mtp_dc_pool      ds_fold`1 ~n"),
     psq:fold(
       fun(_, N, Pid, Acc) ->
               Fun(Pid, N, Acc)
@@ -300,11 +329,13 @@ ds_fold(Fun, Acc0, St) ->
 %% Add new downstream to storage
 -spec ds_add_downstream(downstream(), ds_store()) -> ds_store().
 ds_add_downstream(Conn, St) ->
+    io:format("mtp_dc_pool      ds_add_downstream`1 ~n"),
     pid_psq:add(Conn, St).
 
 %% Get least loaded downstream connection
 -spec ds_get(ds_store()) -> {downstream(), pos_integer(), ds_store()} | empty.
 ds_get(St) ->
+    io:format("mtp_dc_pool      ds_get`1 ~n"),
     %% TODO: should return real number of connections
     case pid_psq:get_min_priority(St) of
         {ok, {{Conn, N}, St1}} ->
@@ -316,6 +347,7 @@ ds_get(St) ->
 %% Return connection back to storage
 -spec ds_return(downstream(), ds_store()) -> ds_store().
 ds_return(Pid, St) ->
+    io:format("mtp_dc_pool      ds_return`1 ~n"),
     %% It may return 'undefined' if down_conn crashed
     case pid_psq:dec_priority(Pid, St) of
         {ok, St1} ->
@@ -327,4 +359,5 @@ ds_return(Pid, St) ->
 
 -spec ds_remove(downstream(), ds_store()) -> ds_store().
 ds_remove(Downstream, St) ->
+    io:format("mtp_dc_pool      ds_remove`1 ~n"),
     pid_psq:delete(Downstream, St).

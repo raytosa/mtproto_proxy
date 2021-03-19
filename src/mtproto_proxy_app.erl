@@ -30,7 +30,8 @@
 %%====================================================================
 %% Application behaviour API
 %%====================================================================
-start(_StartType, _StartArgs) ->
+start(_StartType, _StartArgs) -> 
+  io:format("mtproto_proxy_app     start ~n"),
     Res = {ok, _} = mtproto_proxy_sup:start_link(),
     report("+++++++++++++++++++++++++++++++++++++++~n"
            "Erlang MTProto proxy by @seriyps https://github.com/seriyps/mtproto_proxy~n"
@@ -39,26 +40,33 @@ start(_StartType, _StartArgs) ->
     Res.
 
 
-prep_stop(State) ->
+prep_stop(State) -> 
+  io:format("mtproto_proxy_app     prep_stop ~n"),
     [stop_proxy(Where) || Where <- application:get_env(?APP, ports, [])],
     State.
 
 
-stop(_State) ->
+stop(_State) -> 
+  io:format("mtproto_proxy_app     stop ~n"),
     ok.
 
 
-config_change(Changed, New, Removed) ->
+config_change(Changed, New, Removed) -> 
+  io:format("mtproto_proxy_app     config_change ~n"),
     %% app's env is already updated when this callback is called
-    ok = lists:foreach(fun(K) -> config_changed(removed, K, []) end, Removed),
-    ok = lists:foreach(fun({K, V}) -> config_changed(changed, K, V) end, Changed),
-    ok = lists:foreach(fun({K, V}) -> config_changed(new, K, V) end, New).
+    ok = lists:foreach(fun(K) -> 
+	config_changed(removed, K, []) end, Removed),
+    ok = lists:foreach(fun({K, V}) -> 
+	config_changed(changed, K, V) end, Changed),
+    ok = lists:foreach(fun({K, V}) -> 
+	config_changed(new, K, V) end, New).
 
 %%--------------------------------------------------------------------
 %% Other APIs
 
 %% XXX: this is ad-hoc helper function; it is simplified version of code from OTP application_controller.erl
-reload_config() ->
+reload_config() -> 
+  io:format("mtproto_proxy_app     reload_config ~n"),
     PreEnv = application:get_all_env(?APP),
     NewConfig = read_sys_config(),
     [application:set_env(?APP, K, V) || {K, V} <- NewConfig],
@@ -69,12 +77,14 @@ reload_config() ->
     ?log(info, "Updating config; changed=~p, new=~p, deleted=~p", [Changed, New, Removed]),
     config_change(Changed, New, Removed).
 
-read_sys_config() ->
+read_sys_config() -> 
+  io:format("mtproto_proxy_app     read_sys_config ~n"),
     {ok, [[File]]} = init:get_argument(config),
     {ok, [Data]} = file:consult(File),
     proplists:get_value(?APP, Data, []).
 
-diff_env(NewEnv, OldEnv) ->
+diff_env(NewEnv, OldEnv) -> 
+  io:format("mtproto_proxy_app     diff_env ~n"),
     NewEnvMap = maps:from_list(NewEnv),
     OldEnvMap = maps:from_list(OldEnv),
     NewKeySet = ordsets:from_list(maps:keys(NewEnvMap)),
@@ -83,7 +93,7 @@ diff_env(NewEnv, OldEnv) ->
     AddKeys = ordsets:subtract(NewKeySet, OldKeySet),
     ChangedKeys =
         lists:filter(
-          fun(K) ->
+          fun(K) -> 
                   maps:get(K, NewEnvMap) =/= maps:get(K, OldEnvMap)
           end, ordsets:intersection(OldKeySet, NewKeySet)),
     {[{K, maps:get(K, NewEnvMap)} || K <- ChangedKeys],
@@ -92,20 +102,22 @@ diff_env(NewEnv, OldEnv) ->
 
 
 %% @doc List of ranch listeners running mtproto_proxy
--spec mtp_listeners() -> [tuple()].
-mtp_listeners() ->
+-spec mtp_listeners() ->   [tuple()].
+mtp_listeners() -> 
+  io:format("mtproto_proxy_app     mtp_listeners2 ~n"),
     lists:filter(
-      fun({_Name, Opts}) ->
+      fun({_Name, Opts}) -> 
               proplists:get_value(protocol, Opts) == mtp_handler
       end,
       ranch:info()).
 
 
 %% @doc Currently running listeners in a form of proxy_port()
--spec running_ports() -> [proxy_port()].
-running_ports() ->
+-spec running_ports() ->   [proxy_port()].
+running_ports() -> 
+  io:format("mtproto_proxy_app     running_ports2 ~n"),
     lists:map(
-      fun({Name, Opts}) ->
+      fun({Name, Opts}) -> 
               #{protocol_options := ProtoOpts,
                 ip := Ip,
                 port := Port} = maps:from_list(Opts),
@@ -123,7 +135,8 @@ running_ports() ->
       end, mtp_listeners()).
 
 -spec get_port_secret(atom()) -> {ok, binary()} | not_found.
-get_port_secret(Name) ->
+get_port_secret(Name) -> 
+  io:format("mtproto_proxy_app     get_port_secret2 ~n"),
     case [Secret
           || #{name := PortName, secret := Secret} <- application:get_env(?APP, ports, []),
              PortName == Name] of
@@ -136,8 +149,9 @@ get_port_secret(Name) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
--spec start_proxy(proxy_port()) -> {ok, pid()}.
-start_proxy(#{name := Name, port := Port, secret := Secret, tag := Tag} = P) ->
+-spec start_proxy(proxy_port()) ->  {ok, pid()}.
+start_proxy(#{name := Name, port := Port, secret := Secret, tag := Tag} = P) -> 
+  io:format("mtproto_proxy_app     start_proxy2 ~n"),
     ListenIpStr = maps:get(
                     listen_ip, P,
                     application:get_env(?APP, listen_ip, "0.0.0.0")),
@@ -165,18 +179,23 @@ start_proxy(#{name := Name, port := Port, secret := Secret, tag := Tag} = P) ->
     Res.
 
 
-stop_proxy(#{name := Name}) ->
+stop_proxy(#{name := Name}) -> 
+  io:format("mtproto_proxy_app     stop_proxy ~n"),
     ranch:stop_listener(Name).
 
-config_changed(_, ip_lookup_services, _) ->
+config_changed(_, ip_lookup_services, _) -> 
+  io:format("mtproto_proxy_app     config_changed1 ~n"),
     mtp_config:update();
-config_changed(_, proxy_secret_url, _) ->
+config_changed(_, proxy_secret_url, _) -> 
+  io:format("mtproto_proxy_app     config_changed2 ~n"),
     mtp_config:update();
-config_changed(_, proxy_config_url, _) ->
+config_changed(_, proxy_config_url, _) -> 
+  io:format("mtproto_proxy_app     config_changed3 ~n"),
     mtp_config:update();
 config_changed(Action, max_connections, N) when Action == new; Action == changed ->
     (is_integer(N) and (N >= 0)) orelse error({"max_connections should be non_neg_integer", N}),
-    lists:foreach(fun({Name, _}) ->
+    lists:foreach(fun({Name, _}) -> 
+  io:format("mtproto_proxy_app     config_changed4 ~n"),
                           ranch:set_max_connections(Name, N)
                   end, mtp_listeners());
 config_changed(Action, downstream_socket_buffer_size, N) when Action == new; Action == changed ->
@@ -201,17 +220,21 @@ config_changed(Action, ports, Ports)  when Action == new; Action == changed ->
     lists:foreach(fun stop_proxy/1, ToStop),
     [{ok, _} = start_proxy(Conf) || Conf <- ToStart],
     ok;
-config_changed(Action, K, V) ->
+config_changed(Action, K, V) -> 
+  io:format("mtproto_proxy_app     config_changed7 ~n"),
     %% Most of the other config options are applied automatically without extra work
     ?log(info, "Config ~p ~p to ~p ignored", [K, Action, V]),
     ok.
 
-downstream_connections() ->
+downstream_connections() -> 
+  io:format("mtproto_proxy_app     downstream_connections ~n"),
     [Pid || {_, Pid, worker, [mtp_down_conn]} <- supervisor:which_children(mtp_down_conn_sup)].
 
 
-build_urls(Host, Port, Secret, Protocols) ->
-    MkUrl = fun(ProtoSecret) ->
+build_urls(Host, Port, Secret, Protocols) -> 
+  io:format("mtproto_proxy_app     build_urls ~n"),
+    MkUrl = fun(ProtoSecret) -> 
+  io:format("mtproto_proxy_app     decode_none_test ~n"),
                     io_lib:format(
                       "https://t.me/proxy?server=~s&port=~w&secret=~s",
                       [Host, Port, ProtoSecret])
@@ -222,11 +245,11 @@ build_urls(Host, Port, Secret, Protocols) ->
                               (Other) -> Other
                            end, Protocols)),
     lists:map(
-      fun(mtp_fake_tls) ->
+      fun(mtp_fake_tls) -> 
               Domain = <<"s3.amazonaws.com">>,
               ProtoSecret = mtp_fake_tls:format_secret_hex(Secret, Domain),
               MkUrl(ProtoSecret);
-         (mtp_secure) ->
+         (mtp_secure) -> 
               ProtoSecret = ["dd", Secret],
               MkUrl(ProtoSecret);
          (normal) ->
@@ -234,10 +257,12 @@ build_urls(Host, Port, Secret, Protocols) ->
       end, UrlTypes).
 
 -ifdef(TEST).
-report(Fmt, Args) ->
+report(Fmt, Args) -> 
+  io:format("mtproto_proxy_app     report1 ~n"),
     ?log(debug, Fmt, Args).
 -else.
-report(Fmt, Args) ->
+report(Fmt, Args) -> 
+  io:format("mtproto_proxy_app     report2 ~n"),
     io:format(Fmt ++ "\n", Args),
     ?log(info, Fmt, Args).
 -endif.
@@ -245,7 +270,8 @@ report(Fmt, Args) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-env_diff_test() ->
+env_diff_test() -> 
+  io:format("mtproto_proxy_app     env_diff_test ~n"),
     Pre = [{a, 1},
            {b, 2},
            {c, 3}],

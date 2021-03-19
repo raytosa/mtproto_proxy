@@ -17,13 +17,16 @@
 -opaque codec() :: mtp_intermediate:codec().
 
 new() ->
+    io:format("mtp_secure      middle_key_test ~n"),
     mtp_intermediate:new(#{padding => true}).
 
 -spec try_decode_packet(binary(), codec()) -> {ok, binary(), binary(), codec()}
                                                   | {incomplete, codec()}.
 try_decode_packet(Data, St) ->
+    io:format("mtp_secure      try_decode_packet ~n"),
     mtp_intermediate:try_decode_packet(Data, St).
 
 -spec encode_packet(iodata(), codec()) -> {iodata(), codec()}.
 encode_packet(Data, St) ->
+    io:format("mtp_secure      encode_packet ~n"),
     mtp_intermediate:encode_packet(Data, St).

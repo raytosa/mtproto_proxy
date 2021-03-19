@@ -34,14 +34,16 @@
 %% API functions
 %%====================================================================
 
-start_link() ->
+start_link() -> 
+  io:format("mtproto_proxy_sup     start_link ~n"),
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%====================================================================
 %% Supervisor callbacks
 %%====================================================================
 
-init([]) ->
+init([]) -> 
+  io:format("mtproto_proxy_sup     init ~n"),
     SupFlags = #{strategy => one_for_all,       %TODO: maybe change strategy
                  intensity => 50,
                  period => 5},
