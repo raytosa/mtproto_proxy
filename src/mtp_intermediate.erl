@@ -29,13 +29,13 @@ new() ->
     new(#{}).
 
 new(Opts) ->
-	io:format("mtp_intermediate      new ~n"),
+	io_lib:format("mtp_intermediate      new ~n"),
     #int_st{padding = maps:get(padding, Opts, false)}.
 
 -spec try_decode_packet(binary(), codec()) -> {ok, binary(), binary(), codec()}
                                                   | {incomplete, codec()}.
 try_decode_packet(<<Len:32/unsigned-little, Tail/binary>>, St)  ->
-	io:format("mtp_intermediate      try_decode_packet ~n"),
+	io_lib:format("mtp_intermediate      try_decode_packet ~n"),
     Len1 = case Len < ?MAX_SIZE of
                true -> Len;
                false -> Len - ?MAX_SIZE
@@ -47,11 +47,11 @@ try_decode_packet(<<Len:32/unsigned-little, Tail/binary>>, St)  ->
         end,
     try_decode_packet_len(Len1, Tail, St);
 try_decode_packet(_, St) ->
-	io:format("mtp_intermediate      try_decode_packet ~n"),
+	io_lib:format("mtp_intermediate      try_decode_packet ~n"),
     {incomplete, St}.
 
 try_decode_packet_len(Len, Data, #int_st{padding = Pad} = St) ->
-	io:format("mtp_intermediate      try_decode_packet_len ~n"),
+	io_lib:format("mtp_intermediate      try_decode_packet_len ~n"),
     Padding = case Pad of
                   true -> Len rem 4;
                   false -> 0
@@ -66,7 +66,7 @@ try_decode_packet_len(Len, Data, #int_st{padding = Pad} = St) ->
 
 -spec encode_packet(iodata(), codec()) -> {iodata(), codec()}.
 encode_packet(Data, #int_st{padding = Pad} = St) ->
-	io:format("mtp_intermediate      encode_packet ~n"),
+	io_lib:format("mtp_intermediate      encode_packet ~n"),
     Size = iolist_size(Data),
     Packet = case Pad of
                  false -> [<<Size:32/little>> | Data];

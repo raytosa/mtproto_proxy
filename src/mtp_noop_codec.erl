@@ -17,18 +17,18 @@
 
 -spec new() -> codec().
 new() ->
- io:format("mtp_noop_codec      new ~n"),
+ io_lib:format("mtp_noop_codec      new ~n"),
     ?MODULE.
 
 -spec try_decode_packet(binary(), codec()) -> {ok, binary(), binary(), codec()}.
 try_decode_packet(<<>>, ?MODULE) ->
- io:format("mtp_noop_codec      try_decode_packet1 ~n"),
+ io_lib:format("mtp_noop_codec      try_decode_packet1 ~n"),
     {incomplete, ?MODULE};
 try_decode_packet(Data, ?MODULE) ->
- io:format("mtp_noop_codec      try_decode_packet2 ~n"),
+ io_lib:format("mtp_noop_codec      try_decode_packet2 ~n"),
     {ok, Data, <<>>, ?MODULE}.
 
 -spec encode_packet(binary(), codec()) -> {binary(), codec()}.
 encode_packet(Data, ?MODULE) ->
- io:format("mtp_noop_codec      encode_packet ~n"),
+ io_lib:format("mtp_noop_codec      encode_packet ~n"),
     {Data, ?MODULE}.

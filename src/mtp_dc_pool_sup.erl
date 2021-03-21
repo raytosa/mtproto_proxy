@@ -17,17 +17,17 @@
 -define(SERVER, ?MODULE).
 
 start_link() ->
-    io:format("mtp_dc_pool_sup      start_link ~n"),
+    io_lib:format("mtp_dc_pool_sup      start_link ~n"),
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 -spec start_pool(mtp_config:dc_id()) -> {ok, pid()}.
 start_pool(DcId) ->
-    io:format("mtp_dc_pool_sup      start_pool ~n"),
+    io_lib:format("mtp_dc_pool_sup      start_pool ~n"),
     %% Or maybe it should read IPs from mtp_config by itself?
     supervisor:start_child(?SERVER, [DcId]).
 
 init([]) ->
-    io:format("mtp_dc_pool_sup      init ~n"),
+    io_lib:format("mtp_dc_pool_sup      init ~n"),
 
     SupFlags = #{strategy => simple_one_for_one,
                  intensity => 50,

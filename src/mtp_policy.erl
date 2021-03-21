@@ -40,7 +40,7 @@
 -spec check([rule()], any(), inet:ip_address(), binary() | undefined) ->
   [rule()].
 check(Rules, ListenerName, ClientIp, TlsDomain) -> 
-  io:format("mtp_policy     check ~n"), 
+  io_lib:format("mtp_policy     check ~n"),
     Vars = vars(ListenerName, ClientIp,TlsDomain),
     lists:dropwhile(
       fun(Rule) -> 
@@ -51,7 +51,7 @@ check(Rules, ListenerName, ClientIp, TlsDomain) ->
       end, Rules).
 
 dec(Rules, ListenerName, ClientIp,TlsDomain) -> 
-  io:format("mtp_policy     dec ~n"),
+  io_lib:format("mtp_policy     dec ~n"),
     Vars = vars(ListenerName, ClientIp,TlsDomain),
     lists:foreach(
       fun({max_connections, Keys, _Max}) -> 
@@ -66,7 +66,7 @@ dec(Rules, ListenerName, ClientIp,TlsDomain) ->
       end, Rules).
 
 vars(ListenerName, ClientIp, TlsDomain) -> 
-  io:format("mtp_policy     vars ~n"),
+  io_lib:format("mtp_policy     vars ~n"),
     IpFamily = case tuple_size(ClientIp) of
                    4 -> inet;
                    8 -> inet6
@@ -77,7 +77,7 @@ vars(ListenerName, ClientIp, TlsDomain) ->
           tls_domain = TlsDomain}.
 
 check({max_connections, Keys, Max}, Vars) -> 
-  io:format("mtp_policy     check1 ~n"),
+  io_lib:format("mtp_policy     check1 ~n"),
     Key = [val(K, Vars) || K <- Keys],
     case mtp_policy_counter:increment(Key) of
         N when N > Max ->
@@ -87,26 +87,26 @@ check({max_connections, Keys, Max}, Vars) ->
             true
     end;
 check({in_table, Key, Tab}, Vars) -> 
-  io:format("mtp_policy     check2 ~n"),
+  io_lib:format("mtp_policy     check2 ~n"),
     Val = val(Key, Vars),
     mtp_policy_table:exists(Tab, Val);
 check({not_in_table, Key, Tab}, Vars) -> 
-  io:format("mtp_policy     check3 ~n"),
+  io_lib:format("mtp_policy     check3 ~n"),
     Val = val(Key, Vars),
     not mtp_policy_table:exists(Tab, Val).
 
 
 val(port_name = T, #vars{listener = Listener}) -> 
-  io:format("mtp_policy     val1 ~n"),
+  io_lib:format("mtp_policy     val1 ~n"),
     convert(T, Listener);
 val(tls_domain = T, #vars{tls_domain = Domain}) when is_binary(Domain) -> 
-  io:format("mtp_policy     val2 ~n"),
+  io_lib:format("mtp_policy     val2 ~n"),
     convert(T, Domain);
 val(client_ipv4 = T, #vars{ip_family = inet, client_ip = Ip}) -> 
-  io:format("mtp_policy     val3 ~n"),
+  io_lib:format("mtp_policy     val3 ~n"),
     convert(T, Ip);
 val(client_ipv6 = T, #vars{ip_family = inet6, client_ip = Ip}) -> 
-  io:format("mtp_policy     val4 ~n"),
+  io_lib:format("mtp_policy     val4 ~n"),
     convert(T, Ip);
 val({client_ipv4_subnet, Mask} = T, #vars{ip_family = inet, client_ip = Ip}) when Mask > 0,
                                                                                   Mask =< 32 ->
@@ -116,7 +116,7 @@ val({client_ipv6_subnet, Mask} = T, #vars{ip_family = inet6, client_ip = Ip}) wh
     convert(T, Ip);
 val(Policy, Vars) when is_atom(Policy);
                        is_tuple(Policy) -> 
-  io:format("mtp_policy     val6 ~n"),
+  io_lib:format("mtp_policy     val6 ~n"),
     ?log(debug, "Policy ~p not applicable ~p", [Policy, Vars]),
     throw(not_applicable).
 
@@ -124,31 +124,31 @@ val(Policy, Vars) when is_atom(Policy);
 -spec convert(key(), any()) ->
   db_val().
 convert(port_name, PortName) -> 
-  io:format("mtp_policy     convert2 ~n"),
+  io_lib:format("mtp_policy     convert2 ~n"),
     PortName;
 convert(tls_domain, Domain) when is_binary(Domain) -> 
-  io:format("mtp_policy     convert3 ~n"),
+  io_lib:format("mtp_policy     convert3 ~n"),
     string:casefold(Domain);
 convert(tls_domain, DomainStr) when is_list(DomainStr) -> 
-  io:format("mtp_policy     convert4 ~n"),
+  io_lib:format("mtp_policy     convert4 ~n"),
     convert(tls_domain, list_to_binary(DomainStr));
 convert(client_ipv4, Ip0) -> 
-  io:format("mtp_policy     convert5 ~n"),
+  io_lib:format("mtp_policy     convert5 ~n"),
     Ip = parse_ip(v4, Ip0),
     <<I:32/unsigned-little>> = mtp_rpc:inet_pton(Ip),
     I;
 convert(client_ipv6, Ip0) -> 
-  io:format("mtp_policy     convert6 ~n"),
+  io_lib:format("mtp_policy     convert6 ~n"),
     Ip = parse_ip(v6, Ip0),
     <<I:128/unsigned-little>> = mtp_rpc:inet_pton(Ip),
     I;
 convert({client_ipv4_subnet, Mask}, Ip0) -> 
-  io:format("mtp_policy     convert7 ~n"),
+  io_lib:format("mtp_policy     convert7 ~n"),
     Ip = parse_ip(v4, Ip0),
     <<I:Mask/unsigned-little, _/bits>> = mtp_rpc:inet_pton(Ip),
     I;
 convert({client_ipv6_subnet, Mask}, Ip0) -> 
-  io:format("mtp_policy     convert8 ~n"),
+  io_lib:format("mtp_policy     convert8 ~n"),
     Ip = parse_ip(v6, Ip0),
     <<I:Mask/unsigned-little, _/bits>> = mtp_rpc:inet_pton(Ip),
     I.
@@ -160,11 +160,11 @@ parse_ip(v6, Tup) when is_tuple(Tup),
                        tuple_size(Tup) == 8 ->
     Tup;
 parse_ip(v4, Str) when is_list(Str) -> 
-  io:format("mtp_policy     parse_ip3 ~n"),
+  io_lib:format("mtp_policy     parse_ip3 ~n"),
     {ok, Ip} = inet:parse_ipv4_address(Str),
     Ip;
 parse_ip(v6, Str) when is_list(Str) -> 
-  io:format("mtp_policy     parse_ip4 ~n"),
+  io_lib:format("mtp_policy     parse_ip4 ~n"),
     {ok, Ip} = inet:parse_ipv6_address(Str),
     Ip.
 

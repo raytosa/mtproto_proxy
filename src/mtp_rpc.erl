@@ -63,7 +63,7 @@ decode_nonce(<<?RPC_NONCE,
                Schema:32/little,
                CryptoTs:32/little,
                CliNonce:16/binary>>) -> 
-  io:format("mtp_rpc      decode_nonce ~n"),
+  io_lib:format("mtp_rpc      decode_nonce ~n"),
 			   
     {nonce, KeySelector, Schema, CryptoTs, CliNonce}.
 
@@ -71,11 +71,11 @@ decode_handshake(<<?RPC_HANDSHAKE,
                        ?RPC_FLAGS,
                        SenderPID:12/binary,
                        PeerPID:12/binary>>) -> 
-  io:format("mtp_rpc      decode_handshake ~n"),
+  io_lib:format("mtp_rpc      decode_handshake ~n"),
     {handshake, SenderPID, PeerPID}.
 
 encode_nonce({nonce, KeySelector, Schema, CryptoTs, SrvNonce}) -> 
-  io:format("mtp_rpc      encode_nonce ~n"),
+  io_lib:format("mtp_rpc      encode_nonce ~n"),
     <<?RPC_NONCE,
       KeySelector:4/binary,
       Schema:32/little,
@@ -83,7 +83,7 @@ encode_nonce({nonce, KeySelector, Schema, CryptoTs, SrvNonce}) ->
       SrvNonce:16/binary>>.
 
 encode_handshake({handshake, SenderPID, PeerPID}) -> 
-  io:format("mtp_rpc      encode_handshake ~n"),
+  io_lib:format("mtp_rpc      encode_handshake ~n"),
     <<?RPC_HANDSHAKE,
       0, 0, 0, 0,                    %Some flags
       SenderPID:12/binary,
@@ -94,20 +94,20 @@ encode_handshake({handshake, SenderPID, PeerPID}) ->
 -spec decode_packet(binary()) ->
    packet() | error.
 decode_packet(<<?RPC_PROXY_ANS, _AnsFlags:4/binary, ConnId:64/signed-little, Data/binary>>) -> 
-  io:format("mtp_rpc      decode_packet2 ~n"),
+  io_lib:format("mtp_rpc      decode_packet2 ~n"),
     %% mtproto/mtproto-proxy.c:client_send_message
     {proxy_ans, ConnId, Data};
 decode_packet(<<?RPC_CLOSE_EXT, ConnId:64/signed-little>>) -> 
-  io:format("mtp_rpc      decode_packet3 ~n"),
+  io_lib:format("mtp_rpc      decode_packet3 ~n"),
     {close_ext, ConnId};
 decode_packet(<<?RPC_SIMPLE_ACK, ConnId:64/signed-little, Confirm:4/binary>>) -> 
-  io:format("mtp_rpc      decode_packet4 ~n"),
+  io_lib:format("mtp_rpc      decode_packet4 ~n"),
     %% mtproto/mtproto-proxy.c:push_rpc_confirmation
     {simple_ack, ConnId, Confirm}.
 
 
 encode_packet({data, Msg}, {{ConnId, ClientAddr, ProxyTag}, ProxyAddr}) -> 
-  io:format("mtp_rpc      encode_packet1 ~n"),
+  io_lib:format("mtp_rpc      encode_packet1 ~n"),
     %% See mtproto/mtproto-proxy.c:forward_mtproto_packet
    
     ((iolist_size(Msg) rem 4) == 0)
@@ -137,7 +137,7 @@ encode_packet({data, Msg}, {{ConnId, ClientAddr, ProxyTag}, ProxyAddr}) ->
          | Msg
     ];
 encode_packet(remote_closed, ConnId) -> 
-  io:format("mtp_rpc      encode_packet2 ~n"),
+  io_lib:format("mtp_rpc      encode_packet2 ~n"),
     <<?RPC_CLOSE_CONN, ConnId:64/little-signed>>.
 
 %%
@@ -149,60 +149,60 @@ srv_decode_packet(<<?RPC_PROXY_REQ, _Flags:32/little, ConnId:64/little-signed,
                     _ClientAddrBin:20/binary, _ProxyAddrBin:20/binary,
                     24:32/little, ?TL_PROXY_TAG, 16, _ProxyTag:16/binary, 0, 0, 0,
                     Data/binary>>) -> 
-  io:format("mtp_rpc      srv_decode_packet1 ~n"),
+  io_lib:format("mtp_rpc      srv_decode_packet1 ~n"),
     {data, ConnId, Data};
 srv_decode_packet(<<?RPC_CLOSE_CONN, ConId:64/little-signed>>) -> 
-  io:format("mtp_rpc      srv_decode_packet2 ~n"),
+  io_lib:format("mtp_rpc      srv_decode_packet2 ~n"),
     {remote_closed, ConId}.
 
 %% Opposite of decode_packet
 srv_encode_packet({proxy_ans, ConnId, Data}) -> 
-  io:format("mtp_rpc      srv_encode_packet1 ~n"),
+  io_lib:format("mtp_rpc      srv_encode_packet1 ~n"),
     <<?RPC_PROXY_ANS,
       0, 0, 0, 0,                               %some flags
       ConnId:64/signed-little,
       Data/binary>>;
 srv_encode_packet({close_ext, ConnId}) -> 
-  io:format("mtp_rpc      srv_encode_packet2 ~n"),
+  io_lib:format("mtp_rpc      srv_encode_packet2 ~n"),
     <<?RPC_CLOSE_EXT, ConnId:64/little-signed>>.
 
 %% IP and port as 10 + 2 + 4 + 4 = 20b
 -spec encode_ip_port(inet:ip_address(), inet:port_number()) ->
   iodata().
 encode_ip_port(IPv4, Port) when tuple_size(IPv4) == 4 ->
-	io:format("mtp_rpc      encode_ip_port2 ~n"),
+	io_lib:format("mtp_rpc      encode_ip_port2 ~n"),
     IpBin = inet_pton(IPv4),
     [lists:duplicate(10, <<0>>)
      | <<255,255,
          IpBin/binary,
          Port:32/little>>];
 encode_ip_port(IPv6, Port) when tuple_size(IPv6) == 8 ->
-	io:format("mtp_rpc      encode_ip_port3 ~n"),
+	io_lib:format("mtp_rpc      encode_ip_port3 ~n"),
     IpBin = inet_pton(IPv6),
     [IpBin, <<Port:32/little>>].
 
 inet_pton({X1, X2, X3, X4}) -> 
-  io:format("mtp_rpc      inet_pton1 ~n"),
+  io_lib:format("mtp_rpc      inet_pton1 ~n"),
     <<X1, X2, X3, X4>>;
 inet_pton(IPv6) when tuple_size(IPv6) == 8 ->
-	io:format("mtp_rpc      inet_pton2 ~n"),
+	io_lib:format("mtp_rpc      inet_pton2 ~n"),
     << <<I:16/big-integer>> || I <- tuple_to_list(IPv6)>>.
     
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
 tst_new() -> 
-  io:format("mtp_rpc      tst_new ~n"),
+  io_lib:format("mtp_rpc      tst_new ~n"),
     {{1, encode_ip_port({109, 238, 131, 159}, 1128),
       <<220,190,143,20,147,250,76,217,171,48,8,145,192,181,179,38>>},
      encode_ip_port({80, 211, 29, 34}, 53634)}.
 
 decode_none_test() -> 
-  io:format("mtp_rpc      decode_none_test ~n"),
+  io_lib:format("mtp_rpc      decode_none_test ~n"),
     ?assertError(function_clause, decode_packet(<<>>)).
 
 encode_test() -> 
-  io:format("mtp_rpc      encode_test ~n"),
+  io_lib:format("mtp_rpc      encode_test ~n"),
     S = tst_new(),
     Samples =
         [{<<0,0,0,0,0,0,0,0,0,0,0,0,61,2,24,91,20,0,0,0,120,151,70,96,153,197,142,238,245,139,85,208,160,241,68,89,106,7,118,167>>,
@@ -216,7 +216,7 @@ encode_test() ->
       end, Samples).
 
 decode_test() -> 
-  io:format("mtp_rpc      decode_test ~n"),
+  io_lib:format("mtp_rpc      decode_test ~n"),
     Samples =
         [{<<13,218,3,68,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,52,62,238,60,2,24,91,64,0,0,0,99,36,22,5,153,197,142,238,245,139,85,208,160,241,68,89,106,7,118,167,146,202,163,241,63,158,32,27,246,203,226,70,177,46,106,225,8,34,202,206,241,19,38,121,245,0,0,0,21,196,181,28,1,0,0,0,33,107,232,108,2,43,180,195>>,
           <<0,0,0,0,0,0,0,0,1,52,62,238,60,2,24,91,64,0,0,0,99,36,22,5,153,197,142,238,245,139,85,208,160,241,68,89,106,7,118,167,146,202,163,241,63,158,32,27,246,203,226,70,177,46,106,225,8,34,202,206,241,19,38,121,245,0,0,0,21,196,181,28,1,0,0,0,33,107,232,108,2,43,180,195>>},

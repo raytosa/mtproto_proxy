@@ -24,24 +24,24 @@
 -type metric_doc() :: string().
 
 count_inc(Name, Value, Extra) ->
-  io:format("mtp_metric      count_inc ~n"),
+  io_lib:format("mtp_metric      count_inc ~n"),
 
     notify(count, Name, Value, Extra).
 
 gauge_set(Name, Value, Extra) ->
-  io:format("mtp_metric      gauge_set ~n"),
+  io_lib:format("mtp_metric      gauge_set ~n"),
     notify(gauge, Name, Value, Extra).
 
 histogram_observe(Name, Value, Extra) ->
-  io:format("mtp_metric      histogram_observe ~n"),
+  io_lib:format("mtp_metric      histogram_observe ~n"),
     notify(histogram, Name, Value, Extra).
 
 rt(Name, Fun) ->
-  io:format("mtp_metric      rt 1 ~n"),
+  io_lib:format("mtp_metric      rt 1 ~n"),
     rt(Name, Fun, #{}).
 
 rt(Name, Fun, Extra) ->
-  io:format("mtp_metric      rt 2 ~n"),
+  io_lib:format("mtp_metric      rt 2 ~n"),
     Start = erlang:monotonic_time(),
     try
         Fun()
@@ -51,7 +51,7 @@ rt(Name, Fun, Extra) ->
 
 
 notify(Type, Name, Value, Extra) ->
-  io:format("mtp_metric      notify ~n"),
+  io_lib:format("mtp_metric      notify ~n"),
     case get_backend() of
         undefined ->
             false;
@@ -60,7 +60,7 @@ notify(Type, Name, Value, Extra) ->
     end.
 
 get_backend() ->
-  io:format("mtp_metric      get_backend ~n"),
+  io_lib:format("mtp_metric      get_backend ~n"),
     %% Cache resutl of application:get_env in process dict because it's on the hot path
     case erlang:get(metric_backend) of
         undefined ->
@@ -85,7 +85,7 @@ get_backend() ->
       Labels :: #{atom() => binary() | atom()},
       Value :: integer() | float().
 passive_metrics() ->
-  io:format("mtp_metric      passive_metrics ~n"),
+  io_lib:format("mtp_metric      passive_metrics ~n"),
     DownStatus = mtp_config:status(),
     [{gauge, [?APP, dc_num_downstreams],
       "Count of connections to downstream",
@@ -116,7 +116,7 @@ passive_metrics() ->
                 buckets => [number()],
                 labels => [atom()]}.
 active_metrics() ->
-  io:format("mtp_metric      active_metrics ~n"),
+  io_lib:format("mtp_metric      active_metrics ~n"),
     [{count, [?APP, in_connection, total],
       "MTP incoming connection",
       #{labels => [listener]}},

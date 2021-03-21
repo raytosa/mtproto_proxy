@@ -37,7 +37,7 @@ new(EncKey, EncIv, DecKey, DecIv, BlockSize) ->
 -spec encrypt(iodata(), codec()) -> {binary(), codec()}.
 encrypt(Data, #baes_st{block_size = BSize,
                        encrypt = {EncKey, EncIv}} = S) ->
-    io:format("mtp_aes_cbc      encrypt`1 ~n"),
+    io_lib:format("mtp_aes_cbc      encrypt`1 ~n"),
     ((iolist_size(Data) rem BSize) == 0)
         orelse error({data_not_aligned, BSize, byte_size(Data)}),
     Encrypted = crypto:block_encrypt(aes_cbc, EncKey, EncIv, Data),
@@ -46,7 +46,7 @@ encrypt(Data, #baes_st{block_size = BSize,
 
 -spec decrypt(binary(), codec()) -> {Data :: binary(), Tail :: binary(), codec()}.
 decrypt(Data, #baes_st{block_size = BSize} = S) ->
-    io:format("mtp_aes_cbc      decrypt`1 ~n"),
+    io_lib:format("mtp_aes_cbc      decrypt`1 ~n"),
     Size = byte_size(Data),
     Div = Size div BSize,
     Rem = Size rem BSize,
@@ -65,13 +65,13 @@ decrypt(Data, #baes_st{block_size = BSize} = S) ->
     end.
 
 do_decrypt(Data, Tail, #baes_st{decrypt = {DecKey, DecIv}} = S) ->
-    io:format("mtp_aes_cbc      do_decrypt`1 ~n"),
+    io_lib:format("mtp_aes_cbc      do_decrypt`1 ~n"),
     Decrypted = crypto:block_decrypt(aes_cbc, DecKey, DecIv, Data),
     NewDecIv = crypto:next_iv(aes_cbc, Data),
     {Decrypted, Tail, S#baes_st{decrypt = {DecKey, NewDecIv}}}.
 
 try_decode_packet(Bin, S) ->
-    io:format("mtp_aes_cbc      try_decode_packet`1 ~n"),
+    io_lib:format("mtp_aes_cbc      try_decode_packet`1 ~n"),
     case decrypt(Bin, S) of
         {<<>>, _Tail, S1} ->
             {incomplete, S1};
@@ -80,7 +80,7 @@ try_decode_packet(Bin, S) ->
     end.
 
 encode_packet(Bin, S) -> %%%%%-----yhb  no use
-    io:format("mtp_aes_cbc      encode_packet`1 ~n"),
+    io_lib:format("mtp_aes_cbc      encode_packet`1 ~n"),
     encrypt(Bin, S).
 
 

@@ -56,13 +56,13 @@
 %%%===================================================================
 
 start_link() ->
-    io:format("mtp_config      start_link ~n"),
+    io_lib:format("mtp_config      start_link ~n"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 -spec get_downstream_safe(dc_id(), mtp_down_conn:upstream_opts()) ->
                                  {dc_id(), pid(), mtp_down_conn:handle()}.
 get_downstream_safe(DcId, Opts) ->
-    io:format("mtp_config      get_downstream_safe ~n"),
+    io_lib:format("mtp_config      get_downstream_safe ~n"),
     case get_downstream_pool(DcId) of
         {ok, Pool} ->
             case mtp_dc_pool:get(Pool, self(), Opts) of
@@ -79,7 +79,7 @@ get_downstream_safe(DcId, Opts) ->
     end.
 
 get_downstream_pool(DcId) ->
-    io:format("mtp_config      get_downstream_pool ~n"),
+    io_lib:format("mtp_config      get_downstream_pool ~n"),
     try whereis(mtp_dc_pool:dc_to_pool_name(DcId)) of
         undefined -> not_found;
         Pid when is_pid(Pid) -> {ok, Pid}
@@ -89,7 +89,7 @@ get_downstream_pool(DcId) ->
 
 -spec get_netloc_safe(dc_id()) -> {dc_id(), netloc()}.
 get_netloc_safe(DcId) ->
-    io:format("mtp_config      get_netloc_safe ~n"),
+    io_lib:format("mtp_config      get_netloc_safe ~n"),
     case get_netloc(DcId) of
         {ok, Addr} -> {DcId, Addr};
         not_found ->
@@ -100,7 +100,7 @@ get_netloc_safe(DcId) ->
     end.
 
 get_netloc(DcId) ->
-    io:format("mtp_config      get_netloc ~n"),
+    io_lib:format("mtp_config      get_netloc ~n"),
     Key = ?IPS_KEY(DcId),
     case ets:lookup(?TAB, Key) of
         [] ->
@@ -115,13 +115,13 @@ get_netloc(DcId) ->
 
 -spec get_secret() -> binary().
 get_secret() ->
-    io:format("mtp_config      get_secret ~n"),
+    io_lib:format("mtp_config      get_secret ~n"),
     [{_, Key}] = ets:lookup(?TAB, key),
     Key.
 
 -spec status() -> [mtp_dc_pool:status()].
 status() ->
-    io:format("mtp_config      status ~n"),
+    io_lib:format("mtp_config      status ~n"),
     [{?IDS_KEY, L}] = ets:lookup(?TAB, ?IDS_KEY),
     lists:map(
       fun(DcId) ->
@@ -132,7 +132,7 @@ status() ->
 
 -spec update() -> ok.
 update() ->
-    io:format("mtp_config      update ~n"),
+    io_lib:format("mtp_config      update ~n"),
     gen_server:cast(?MODULE, update).
 
 
@@ -140,7 +140,7 @@ update() ->
 %%% gen_server callbacks
 %%%===================================================================
 init([]) ->
-    io:format("mtp_config      init ~n"),
+    io_lib:format("mtp_config      init ~n"),
     Timer = gen_timeout:new(
               #{timeout => {env, ?APP, conf_refresh_interval, 3600},
                 unit => second}),
@@ -155,12 +155,12 @@ init([]) ->
 
 %%--------------------------------------------------------------------
 handle_call(_Request, _From, State) ->
-    io:format("mtp_config      handle_call ~n"),
+    io_lib:format("mtp_config      handle_call ~n"),
     Reply = ok,
     {reply, Reply, State}.
 
 handle_cast(update, #state{timer = Timer} = State) ->
-    io:format("mtp_config      handle_cast ~n"),
+    io_lib:format("mtp_config      handle_cast ~n"),
     update(State, soft),
     ?log(info, "Config updated"),
     Timer1 = gen_timeout:bump(
@@ -168,7 +168,7 @@ handle_cast(update, #state{timer = Timer} = State) ->
     {noreply, State#state{timer = Timer1}}.
 
 handle_info(timeout, #state{timer = Timer} =State) ->
-    io:format("mtp_config      handle_info ~n"),
+    io_lib:format("mtp_config      handle_info ~n"),
     case gen_timeout:is_expired(Timer) of
         true ->
             update(State, soft),
@@ -182,7 +182,7 @@ handle_info(timeout, #state{timer = Timer} =State) ->
 terminate(_Reason, _State) ->
     ok.
 code_change(_OldVsn, State, _Extra) ->
-    io:format("mtp_config      code_change ~n"),
+    io_lib:format("mtp_config      code_change ~n"),
     {ok, State}.
 
 %%%===================================================================
@@ -190,12 +190,12 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 
 update(#state{tab = Tab}, force) ->
-    io:format("mtp_config      update 1 ~n"),
+    io_lib:format("mtp_config      update 1 ~n"),
     update_ip(),
     update_key(Tab),
     update_config(Tab);
 update(State, _) ->
-    io:format("mtp_config      update 2 ~n"),
+    io_lib:format("mtp_config      update 2 ~n"),
     try update(State, force)
     catch ?WITH_STACKTRACE(Class, Reason, Stack)
             ?log(error, "Err updating proxy settings: ~s",
@@ -203,13 +203,13 @@ update(State, _) ->
     end.
 
 update_key(Tab) ->
-    io:format("mtp_config      update_key ~n"),
+    io_lib:format("mtp_config      update_key ~n"),
     Url = application:get_env(mtproto_proxy, proxy_secret_url, ?SECRET_URL),
     {ok, Body} = http_get(Url),
     true = ets:insert(Tab, {key, list_to_binary(Body)}).
 
 update_config(Tab) ->
-    io:format("mtp_config      update_config ~n"),
+    io_lib:format("mtp_config      update_config ~n"),
     Url = application:get_env(mtproto_proxy, proxy_config_url, ?CONFIG_URL),
     {ok, Body} = http_get(Url),
     Downstreams = parse_config(Body),
@@ -217,7 +217,7 @@ update_config(Tab) ->
     update_ids(Downstreams, Tab).
 
 parse_config(Body) ->
-    io:format("mtp_config      parse_config ~n"),
+    io_lib:format("mtp_config      parse_config ~n"),
     Lines = string:lexemes(Body, "\n"),
     ProxyLines = lists:filter(
                    fun("proxy_for " ++ _) -> true;
@@ -226,7 +226,7 @@ parse_config(Body) ->
     [parse_downstream(Line) || Line <- ProxyLines].
 
 parse_downstream(Line) ->
-    io:format("mtp_config      parse_downstream ~n"),
+    io_lib:format("mtp_config      parse_downstream ~n"),
     ["proxy_for",
      DcId,
      IpPort] = string:lexemes(Line, " "),
@@ -238,7 +238,7 @@ parse_downstream(Line) ->
      Port}.
 
 update_downstreams(Downstreams, Tab) ->
-    io:format("mtp_config      update_downstreams ~n"),
+    io_lib:format("mtp_config      update_downstreams ~n"),
     ByDc = lists:foldl(
              fun({DcId, Ip, Port}, Acc) ->
                      Netlocs = maps:get(DcId, Acc, []),
@@ -258,12 +258,12 @@ update_downstreams(Downstreams, Tab) ->
       maps:keys(ByDc)).
 
 update_ids(Downstreams, Tab) ->
-    io:format("mtp_config      update_ids ~n"),
+    io_lib:format("mtp_config      update_ids ~n"),
     Ids = lists:usort([DcId || {DcId, _, _} <- Downstreams]),
     true = ets:insert(Tab, {?IDS_KEY, Ids}).
 
 update_ip() ->
-    io:format("mtp_config      update_ip 1 ~n"),
+    io_lib:format("mtp_config      update_ip 1 ~n"),
     case application:get_env(?APP, ip_lookup_services) of
         undefined -> false;
         {ok, URLs} ->
@@ -271,7 +271,7 @@ update_ip() ->
     end.
 
 update_ip([Url | Fallbacks]) ->
-    io:format("mtp_config      update_ip 2 ~n"),
+    io_lib:format("mtp_config      update_ip 2 ~n"),
     try
         {ok, Body} = http_get(Url),
         IpStr= string:trim(Body),
@@ -283,7 +283,7 @@ update_ip([Url | Fallbacks]) ->
             update_ip(Fallbacks)
     end;
 update_ip([]) ->
-    io:format("mtp_config      update_ip 3 ~n"),
+    io_lib:format("mtp_config      update_ip 3 ~n"),
     error(ip_lookup_failed).
 
 -ifdef(OTP_VERSION).
@@ -295,7 +295,7 @@ update_ip([]) ->
 -endif.
 
 http_get(Url) ->
-    io:format("mtp_config      http_get ~n"),
+    io_lib:format("mtp_config      http_get ~n"),
     {ok, Vsn} = application:get_key(mtproto_proxy, vsn),
     UserAgent = "MTProtoProxy/" ++ Vsn ++ " (+https://github.com/seriyps/mtproto_proxy)",
     Headers = [{"User-Agent", UserAgent}],
@@ -304,7 +304,7 @@ http_get(Url) ->
     {ok, Body}.
 
 random_choice(L) ->
-    io:format("mtp_config      random_choice ~n"),
+    io_lib:format("mtp_config      random_choice ~n"),
     Idx = rand:uniform(length(L)),
     lists:nth(Idx, L).
 

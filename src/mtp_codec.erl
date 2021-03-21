@@ -70,41 +70,41 @@ new(CryptoMod, CryptoState, PacketMod, PacketState, UseTls, TlsState, Limit) ->
 
 -spec replace(layer(), module() | boolean(), any(), codec()) -> codec().
 replace(tls, HaveTls, St, #codec{tls_buf = <<>>} = Codec) ->
-    io:format("mtp_codec      replace`1 ~n"),
+    io_lib:format("mtp_codec      replace`1 ~n"),
     Codec#codec{have_tls = HaveTls, tls_state = St};
 replace(crypto, Mod, St, #codec{crypto_buf = <<>>} = Codec) ->
-    io:format("mtp_codec      replace`2 ~n"),
+    io_lib:format("mtp_codec      replace`2 ~n"),
     Codec#codec{crypto_mod = Mod, crypto_state = St};
 replace(packet, Mod, St, #codec{packet_buf = <<>>} = Codec) ->
-    io:format("mtp_codec      replace`3 ~n"),
+    io_lib:format("mtp_codec      replace`3 ~n"),
     Codec#codec{packet_mod = Mod, packet_state = St}.
 
 
 -spec info(layer(), codec()) -> {module() | boolean(), state()}.
 info(tls, #codec{have_tls = HaveTls, tls_state = TlsState}) ->
-    io:format("mtp_codec      info`1 ~n"),
+    io_lib:format("mtp_codec      info`1 ~n"),
     {HaveTls, TlsState};
 info(crypto, #codec{crypto_mod = CryptoMod, crypto_state = CryptoState}) ->
-    io:format("mtp_codec      info`2 ~n"),
+    io_lib:format("mtp_codec      info`2 ~n"),
     {CryptoMod, CryptoState};
 info(packet, #codec{packet_mod = PacketMod, packet_state = PacketState}) ->
-    io:format("mtp_codec      info`3 ~n"),
+    io_lib:format("mtp_codec      info`3 ~n"),
     {PacketMod, PacketState}.
 
 
 %% @doc Push already produced data back to one of codec's input buffers
 -spec push_back(layer() | first, binary(), codec()) -> codec().
 push_back(tls, Data, #codec{tls_buf = Buf} = Codec) ->
-    io:format("mtp_codec      push_back`1 ~n"),
+    io_lib:format("mtp_codec      push_back`1 ~n"),
     assert_overflow(Codec#codec{tls_buf = <<Data/binary, Buf/binary>>});
 push_back(crypto, Data, #codec{crypto_buf = Buf} = Codec) ->
-    io:format("mtp_codec      push_back`2 ~n"),
+    io_lib:format("mtp_codec      push_back`2 ~n"),
     assert_overflow(Codec#codec{crypto_buf = <<Data/binary, Buf/binary>>});
 push_back(packet, Data, #codec{packet_buf = Buf} = Codec) ->
-    io:format("mtp_codec      push_back`3 ~n"),
+    io_lib:format("mtp_codec      push_back`3 ~n"),
     assert_overflow(Codec#codec{packet_buf = <<Data/binary, Buf/binary>>});
 push_back(first, Data, #codec{have_tls = HaveTls} = Codec) ->
-    io:format("mtp_codec      push_back`4 ~n"),
+    io_lib:format("mtp_codec      push_back`4 ~n"),
     Destination =
         case HaveTls of
             true -> tls;
@@ -116,32 +116,32 @@ push_back(first, Data, #codec{have_tls = HaveTls} = Codec) ->
 
 -spec try_decode_packet(binary(), codec()) -> {ok, binary(), codec()} | {incomplete, codec()}.
 try_decode_packet(Bin, S) ->
-    io:format("mtp_codec      try_decode_packet`1 ~n"),
+    io_lib:format("mtp_codec      try_decode_packet`1 ~n"),
     decode_tls(Bin, S).
 
 decode_tls(Bin, #codec{have_tls = false} = S) ->
-    io:format("mtp_codec      decode_tls`1 ~n"),
+    io_lib:format("mtp_codec      decode_tls`1 ~n"),
     decode_crypto(Bin, S);
 decode_tls(<<>>, #codec{tls_buf = <<>>} = S) ->
-    io:format("mtp_codec      decode_tls`2 ~n"),
+    io_lib:format("mtp_codec      decode_tls`2 ~n"),
     decode_crypto(<<>>, S);
 decode_tls(Bin, #codec{tls_state = TlsSt, tls_buf = <<>>} = S) ->
-    io:format("mtp_codec      decode_tls`3 ~n"),
+    io_lib:format("mtp_codec      decode_tls`3 ~n"),
     {DecIolist, Tail, TlsSt1} = mtp_fake_tls:decode_all(Bin, TlsSt),
     decode_crypto(iolist_to_binary(DecIolist), assert_overflow(S#codec{tls_state = TlsSt1, tls_buf = Tail}));
 decode_tls(Bin, #codec{tls_buf = Buf} = S) ->
-    io:format("mtp_codec      decode_tls`1 ~n"),
+    io_lib:format("mtp_codec      decode_tls`1 ~n"),
     decode_tls(<<Buf/binary, Bin/binary>>, S#codec{tls_buf = <<>>}).
 
 
 decode_crypto(<<>>, #codec{crypto_state = CS, crypto_buf = <<>>} = S) ->
-    io:format("mtp_codec      decode_crypto`1 ~n"),
+    io_lib:format("mtp_codec      decode_crypto`1 ~n"),
     %% There might be smth in packet buffer
     decode_packet(<<>>, CS, <<>>, S);
 decode_crypto(Bin, #codec{crypto_mod = CryptoMod,
                           crypto_state = CryptoSt,
                           crypto_buf = <<>>} = S) ->
-    io:format("mtp_codec      decode_crypto`2 ~n"),
+    io_lib:format("mtp_codec      decode_crypto`2 ~n"),
     case CryptoMod:try_decode_packet(Bin, CryptoSt) of
         {incomplete, CryptoSt1} ->
             decode_packet(<<>>, CryptoSt1, Bin, S);
@@ -149,18 +149,18 @@ decode_crypto(Bin, #codec{crypto_mod = CryptoMod,
             decode_packet(Dec1, CryptoSt1, Tail1, S)
     end;
 decode_crypto(Bin, #codec{crypto_buf = Buf} = S) ->
-    io:format("mtp_codec      decode_crypto`3 ~n"),
+    io_lib:format("mtp_codec      decode_crypto`3 ~n"),
     decode_crypto(<<Buf/binary, Bin/binary>>, S#codec{crypto_buf = <<>>}).
 
 
 decode_packet(<<>>, CryptoSt, CryptoTail, #codec{packet_buf = <<>>} = S) ->
-    io:format("mtp_codec      decode_packet`1 ~n"),
+    io_lib:format("mtp_codec      decode_packet`1 ~n"),
     %% Crypto produced nothing and there is nothing in packet buf
     {incomplete, assert_overflow(S#codec{crypto_state = CryptoSt, crypto_buf = CryptoTail})};
 decode_packet(Bin, CryptoSt, CryptoTail, #codec{packet_mod = PacketMod,
                                                 packet_state = PacketSt,
                                                 packet_buf = <<>>} = S) ->
-    io:format("mtp_codec      decode_packet`2 ~n"),
+    io_lib:format("mtp_codec      decode_packet`2 ~n"),
     %% Crypto produced smth, and there is nothing in pkt buf
     case PacketMod:try_decode_packet(Bin, PacketSt) of
         {incomplete, PacketSt1} ->
@@ -178,7 +178,7 @@ decode_packet(Bin, CryptoSt, CryptoTail, #codec{packet_mod = PacketMod,
                                  packet_buf = Tail})}
     end;
 decode_packet(Bin, CSt, CTail, #codec{packet_buf = Buf} = S) ->
-    io:format("mtp_codec      decode_packet`3 ~n"),
+    io_lib:format("mtp_codec      decode_packet`3 ~n"),
     decode_packet(<<Buf/binary, Bin/binary>>, CSt, CTail, S#codec{packet_buf = <<>>}).
 
 
@@ -190,7 +190,7 @@ encode_packet(Bin, #codec{have_tls = HaveTls,
                           packet_state = PacketSt,
                           crypto_mod = CryptoMod,
                           crypto_state = CryptoSt} = S) ->
-    io:format("mtp_codec      encode_packet`1 ~n"),
+    io_lib:format("mtp_codec      encode_packet`1 ~n"),
     {Enc1, PacketSt1} = PacketMod:encode_packet(Bin, PacketSt),
     {Enc2, CryptoSt1} = CryptoMod:encode_packet(Enc1, CryptoSt),
     case HaveTls of
@@ -208,7 +208,7 @@ encode_packet(Bin, #codec{have_tls = HaveTls,
                               when
       FoldSt :: any().
 fold_packets(Fun, FoldSt, Data, Codec) ->
-    io:format("mtp_codec      fold_packets`1 ~n"),
+    io_lib:format("mtp_codec      fold_packets`1 ~n"),
     case try_decode_packet(Data, Codec) of
         {ok, Decoded, Codec1} ->
             {FoldSt1, Codec2} = Fun(Decoded, FoldSt, Codec1),
@@ -223,7 +223,7 @@ fold_packets(Fun, FoldSt, Data, Codec) ->
                               when
       FoldSt :: any().
 fold_packets_if(Fun, FoldSt0, Data, Codec0) ->
-    io:format("mtp_codec      fold_packets_if`1 ~n"),
+    io_lib:format("mtp_codec      fold_packets_if`1 ~n"),
     case try_decode_packet(Data, Codec0) of
         {ok, Decoded, Codec1} ->
             case Fun(Decoded, FoldSt0, Codec1) of
@@ -241,7 +241,7 @@ is_empty(#codec{packet_buf = <<>>, crypto_buf = <<>>, tls_buf = <<>>}) -> true;
 is_empty(_) -> false.
 
 assert_overflow(#codec{packet_buf = PB, crypto_buf = CB, tls_buf = TB, limit = Limit} = Codec) ->
-    io:format("mtp_codec      assert_overflow`1 ~n"),
+    io_lib:format("mtp_codec      assert_overflow`1 ~n"),
     Size = byte_size(PB) + byte_size(CB) + byte_size(TB),
     case Size > Limit of
         true ->

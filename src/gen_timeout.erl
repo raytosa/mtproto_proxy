@@ -51,7 +51,7 @@ new(Opts) ->
 
 -spec set_timeout(timeout_type(), tout()) -> tout().
 set_timeout(Timeout, S) ->
-    io:format("gen_timeout      set_timeout ~n"),
+    io_lib:format("gen_timeout      set_timeout ~n"),
     reset(S#timeout{timeout = Timeout}).
 
 -spec bump(tout()) -> tout().
@@ -60,7 +60,7 @@ bump(#timeout{unit = Unit} = S) ->
 
 -spec reset(tout()) -> tout().
 reset(#timeout{ref = Ref, message = Message, unit = Unit} = S) ->
-    io:format("gen_timeout      reset ~n"),
+    io_lib:format("gen_timeout      reset ~n"),
     (is_reference(Ref))
         andalso erlang:cancel_timer(Ref),
     SendAfter = max(time_left(S), 0),
