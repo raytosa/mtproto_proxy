@@ -22,7 +22,7 @@ start_link() ->
 
 -spec start_conn(pid(), mtp_conf:dc_id()) -> {ok, pid()}.
 start_conn(Pool, DcId) ->
-    io_lib:format("mtp_down_conn_sup      start_conn ~n"),
+    %%io_lib:format("mtp_down_conn_sup      start_conn ~n"),
     supervisor:start_child(?SERVER, [Pool, DcId]).
 
 init([]) ->

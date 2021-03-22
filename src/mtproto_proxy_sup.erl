@@ -35,7 +35,7 @@
 %%====================================================================
 
 start_link() -> 
-  io_lib:format("mtproto_proxy_sup     start_link ~n"),
+  %%io_lib:format("mtproto_proxy_sup     start_link ~n"),
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%====================================================================
@@ -43,7 +43,7 @@ start_link() ->
 %%====================================================================
 
 init([]) -> 
-  io_lib:format("mtproto_proxy_sup     init ~n"),
+  %%io_lib:format("mtproto_proxy_sup     init ~n"),
     SupFlags = #{strategy => one_for_all,       %TODO: maybe change strategy
                  intensity => 50,
                  period => 5},

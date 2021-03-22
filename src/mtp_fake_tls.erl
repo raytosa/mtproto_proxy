@@ -81,33 +81,33 @@
 
 %% @doc format TLS secret
 format_secret_hex(Secret, Domain) when byte_size(Secret) == 16 ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     mtp_handler:hex(<<16#ee, Secret/binary, Domain/binary>>);
 format_secret_hex(HexSecret, Domain) when byte_size(HexSecret) == 32 ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     format_secret_hex(mtp_handler:unhex(HexSecret), Domain).
 
 -spec format_secret_base64(binary(), binary()) -> binary().
 format_secret_base64(Secret, Domain) when byte_size(Secret) == 16 ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     base64url(<<16#ee, Secret/binary, Domain/binary>>);
 format_secret_base64(HexSecret, Domain) when byte_size(HexSecret) == 32 ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     format_secret_base64(mtp_handler:unhex(HexSecret), Domain).
 
 base64url(Bin) ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     %% see https://hex.pm/packages/base64url
     << << (urlencode_digit(D)) >> || <<D>> <= base64:encode(Bin), D =/= $= >>.
 
 urlencode_digit($/) ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     $_;
 urlencode_digit($+) ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     $-;
 urlencode_digit(D)  ->
-    io_lib:format("mtp_fake_tls      init ~n"),
+    %%io_lib:format("mtp_fake_tls      init ~n"),
     D.
 
 %% Parse fake-TLS "ClientHello" packet and generate "ServerHello + ChangeCipher + ApplicationData"

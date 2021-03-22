@@ -73,7 +73,7 @@ start_config_server(Ip, Port, Secret, DcConfig, Acc) ->
                      {mtp_dc_conf, DcConfig}]),
     %% Get listen port in case when Port is 0 (ephemeral)
     [{port, RealPort}] = httpd:info(Pid, [port]),
-    Netloc = lists:flatten(io_lib:format("http://~s:~w", [inet:ntoa(Ip), RealPort])),
+    Netloc = lists:flatten(%%io_lib:format("http://~s:~w", [inet:ntoa(Ip), RealPort])),
     Env = [{proxy_secret_url,
             Netloc ++ ?SECRET_PATH},
            {proxy_config_url,
@@ -107,7 +107,7 @@ stop_config_server(#{env := Env, httpd_pid := Pid} = Acc) ->
 dc_list_to_config(List) ->
     <<
       <<(list_to_binary(
-           io_lib:format("proxy_for ~w ~s:~w;~n", [DcId, inet:ntoa(Ip), Port])
+           %%io_lib:format("proxy_for ~w ~s:~w;~n", [DcId, inet:ntoa(Ip), Port])
           ))/binary>>
       || {DcId, Ip, Port} <- List
       >>.

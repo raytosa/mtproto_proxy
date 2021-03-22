@@ -34,22 +34,22 @@
 
 
 new() -> 
-  io_lib:format("mtp_full      new 1 ~n"),
+  %%io_lib:format("mtp_full      new 1 ~n"),
     new(0, 0, true).
 
 new(EncSeqNo, DecSeqNo, CheckCRC) -> 
-  io_lib:format("mtp_full      new 2 ~n"),
+  %%io_lib:format("mtp_full      new 2 ~n"),
     #full_st{enc_seq_no = EncSeqNo,
              dec_seq_no = DecSeqNo,
              check_crc = CheckCRC}.
 
 try_decode_packet(<<4:32/little, Tail/binary>>, S) -> 
-  io_lib:format("mtp_full      try_decode_packet ~n"),
+  %%io_lib:format("mtp_full      try_decode_packet ~n"),
     %% Skip padding
     try_decode_packet(Tail, S);
 try_decode_packet(<<Len:32/little, PktSeqNo:32/signed-little, Tail/binary>>,
                   #full_st{dec_seq_no = SeqNo, check_crc = CheckCRC} = S) -> 
-  io_lib:format("mtp_full      try_decode_packet ~n"),
+  %%io_lib:format("mtp_full      try_decode_packet ~n"),
     ((Len rem byte_size(?PAD)) == 0)
         orelse error({wrong_alignement, Len}),
     ((?MIN_MSG_LEN =< Len) and (Len =< ?MAX_MSG_LEN))
@@ -73,19 +73,19 @@ try_decode_packet(<<Len:32/little, PktSeqNo:32/signed-little, Tail/binary>>,
             {incomplete, S}
     end;
 try_decode_packet(_, S) -> 
-  io_lib:format("mtp_full      try_decode_packet ~n"),
+  %%io_lib:format("mtp_full      try_decode_packet ~n"),
     {incomplete, S}.
 
 trim_padding(<<4:32/little, Tail/binary>>) -> 
-  io_lib:format("mtp_full      trim_padding 1 ~n"),
+  %%io_lib:format("mtp_full      trim_padding 1 ~n"),
     trim_padding(Tail);
 trim_padding(Bin) -> 
-  io_lib:format("mtp_full      trim_padding 2 ~n"),
+  %%io_lib:format("mtp_full      trim_padding 2 ~n"),
   Bin.
 
 
 encode_packet(Bin, #full_st{enc_seq_no = SeqNo} = S) -> 
-  io_lib:format("mtp_full      encode_packet ~n"),
+  %%io_lib:format("mtp_full      encode_packet ~n"),
     BodySize = iolist_size(Bin),
     ((BodySize rem byte_size(?PAD)) == 0)
         orelse error({wrong_alignment, BodySize}),
@@ -102,7 +102,7 @@ encode_packet(Bin, #full_st{enc_seq_no = SeqNo} = S) ->
     {[FullMsg | Padding], S#full_st{enc_seq_no = SeqNo + 1}}.
 
 padding_size(Len) -> 
-  io_lib:format("mtp_full      padding_size ~n"),
+  %%io_lib:format("mtp_full      padding_size ~n"),
     %% XXX: is there a cleaner way?
     (?BLOCK_SIZE - (Len rem ?BLOCK_SIZE)) rem ?BLOCK_SIZE.
 
@@ -111,7 +111,7 @@ padding_size(Len) ->
 -include_lib("eunit/include/eunit.hrl").
 
 encode_nopadding_test() -> 
-  io_lib:format("mtp_full      encode_nopadding_test ~n"),
+  %%io_lib:format("mtp_full      encode_nopadding_test ~n"),
     S = new(),
     {Enc, _S1} = encode_packet(<<1, 1, 1, 1>>, S),
     ?assertEqual(
@@ -122,7 +122,7 @@ encode_nopadding_test() ->
        iolist_to_binary(Enc)).
 
 encode_padding_test() -> 
-  io_lib:format("mtp_full      encode_padding_test ~n"),
+  %%io_lib:format("mtp_full      encode_padding_test ~n"),
     S = new(),
     {Enc, _S1} = encode_packet(<<1,1,1,1,1,1,1,1>>, S),
     ?assertEqual(
@@ -133,7 +133,7 @@ encode_padding_test() ->
        iolist_to_binary(Enc)).
 
 encode_padding_seq_test() -> 
-  io_lib:format("mtp_full      encode_padding_seq_test ~n"),
+  %%io_lib:format("mtp_full      encode_padding_seq_test ~n"),
     S = new(),
     {Enc1, S1} = encode_packet(binary:copy(<<9>>, 8), S),
     ?assertEqual(
@@ -153,13 +153,13 @@ encode_padding_seq_test() ->
        iolist_to_binary(Enc2)).
 
 decode_none_test() -> 
-  io_lib:format("mtp_full      decode_none_test ~n"),
+  %%io_lib:format("mtp_full      decode_none_test ~n"),
     S = new(),
     ?assertEqual(
        {incomplete, S}, try_decode_packet(<<>>, S)).
 
 codec_test() -> 
-  io_lib:format("mtp_full      codec_test ~n"),
+  %%io_lib:format("mtp_full      codec_test ~n"),
     %% Overhead is 12b per-packet
     S = new(),
     Packets = [
@@ -178,7 +178,7 @@ codec_test() ->
       end, S, Packets).
 
 codec_stream_test() -> 
-  io_lib:format("mtp_full      codec_stream_test ~n"),
+  %%io_lib:format("mtp_full      codec_stream_test ~n"),
     S = new(),
     Packets = [
                binary:copy(<<0>>, 4),           %non-padded
