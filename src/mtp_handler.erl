@@ -67,7 +67,7 @@ start_link(Ref, _Socket, Transport, Opts) ->
     {ok, proc_lib:spawn_link(?MODULE, ranch_init, [{Ref, Transport, Opts}])}.
 
 keys_str() -> 
-  %%io_lib:format("mtp_handler      keys_str ~n"),
+
     [{Name, Port, hex(Secret)}
      || {Name, Port, Secret} <- application:get_env(?APP, ports, [])].
 
