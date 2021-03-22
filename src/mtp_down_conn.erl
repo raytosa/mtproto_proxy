@@ -171,7 +171,7 @@ handle_cast(shutdown, State) ->
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, dc_id = DcId} = S) ->
     %%io_lib:format("mtp_down_conn      handle_info 1 ~n"),
-    io:format("mtp_down_conn      handle_info 1 ~n ~p --- ~n~p~n",[byte_size(Data), Data]),
+    %%ok%% io:format("mtp_down_conn      handle_info 1 ~n ~p --- ~n~p~n",[byte_size(Data), Data]),
 
     mtp_metric:count_inc([?APP, received, downstream, bytes], byte_size(Data), #{labels => [DcId]}),
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], byte_size(Data), #{labels => [downstream]}),
@@ -334,6 +334,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %%io_lib:format("mtp_down_conn      down_send ~n"),
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
+    io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
       fun() ->
