@@ -304,7 +304,7 @@ handle_downstream_data(Bin, #state{stage = handshake_2,
 
 -spec handle_rpc(mtp_rpc:packet(), #state{}) -> #state{}.
 handle_rpc({proxy_ans, ConnId, Data}, St) ->
-    io:format("mtp_down_conn      handle_rpc 1 ~p ~n",[Data]),
+   %%% io:format("mtp_down_conn      handle_rpc 1 ~p ~n",[Data]),
     up_send({proxy_ans, self(), Data}, ConnId, St);
 handle_rpc({close_ext, ConnId}, St) ->
     io:format("mtp_down_conn      handle_rpc 2 ~n"),
