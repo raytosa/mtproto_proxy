@@ -233,7 +233,7 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
             down_send(Packet, St),
-            io:format("mtp_down_conn      handle_send ~n ~p ~n",[ProxyAddr]);
+            io:format("mtp_down_conn      handle_send ~n  ~n");
         _ ->
             ?log(warning, "Upstream=~p not found", [Upstream]),
             {{error, unknown_upstream}, St}
