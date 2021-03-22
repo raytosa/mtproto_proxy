@@ -175,7 +175,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, dc_id = DcId} = S) ->
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], byte_size(Data), #{labels => [downstream]}),
     {ok, S1} = handle_downstream_data(Data, S),
 
-    io:format("mtp_down_conn      handle_info 1 ~n ~p: ~p~n", [Data]),
+    io:format("mtp_down_conn      handle_info 1 ~n ~p~n", [Data]),
 
     activate_if_no_overflow(S1),
     {noreply, S1};
