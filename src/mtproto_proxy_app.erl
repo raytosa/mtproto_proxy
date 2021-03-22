@@ -264,7 +264,7 @@ report(Fmt, Args) ->
 report(Fmt, Args) -> 
 
   io_lib:format(Fmt ++ "123456789\n", Args),
-   io_lib:format("~p",["mtproto_proxy_app     report2 \n"]),
+  % io_lib:format("~p",["mtproto_proxy_app     report2 \n"]),
     ?log(info, Fmt, Args).
 -endif.
 
