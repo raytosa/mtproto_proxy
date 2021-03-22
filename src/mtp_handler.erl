@@ -64,7 +64,8 @@
 %% APIs
 
 start_link(Ref, _Socket, Transport, Opts) ->  
-  %%io_lib:format("mtp_handler      start_link ~n"),
+  io_lib:format("mtp_handler      start_link ~n"),
+    io:format("mtp_handler      start_link ~n"),
     {ok, proc_lib:spawn_link(?MODULE, ranch_init, [{Ref, Transport, Opts}])}.
 
 keys_str() -> 
@@ -75,7 +76,8 @@ keys_str() ->
 -spec send(pid(), mtp_rpc:packet()) -> 
   ok.
 send(Upstream, Packet) -> 
-  %%io_lib:format("mtp_handler      send ~n"),
+  io_lib:format("mtp_handler      send ~n"),
+    io:format("mtp_handler      send ~n"),
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
@@ -593,7 +595,7 @@ sum_binary(BinInfo) ->
                               Sum + (Size / RefC)
                       end, 0, BinInfo)).
 
-hex(Bin) -> 
+hex(Bin) ->
   %%io_lib:format("mtp_handler      hex ~n"),
     <<begin
          if N < 10 ->
