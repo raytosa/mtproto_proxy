@@ -18,7 +18,6 @@
 -define(SERVER, ?MODULE).
 
 start_link() ->
-    io_lib:format("mtp_down_conn_sup      start_link ~n"),
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 -spec start_conn(pid(), mtp_conf:dc_id()) -> {ok, pid()}.
@@ -27,7 +26,6 @@ start_conn(Pool, DcId) ->
     supervisor:start_child(?SERVER, [Pool, DcId]).
 
 init([]) ->
-    io_lib:format("mtp_down_conn_sup      init ~n"),
     SupFlags = #{strategy => simple_one_for_one,
                  intensity => 50,
                  period => 5},
