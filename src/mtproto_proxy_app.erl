@@ -32,7 +32,7 @@
 %% Application behaviour API
 %%====================================================================
 start(_StartType, _StartArgs) -> 
-  io_lib:format("mtproto_proxy_app     start ~n"),
+
     Res = {ok, _} = mtproto_proxy_sup:start_link(),
     report("+++++++++++++++++++++++++++++++++++++++~n"
            "Erlang MTProto proxy by @seriyps https://github.com/seriyps/mtproto_proxy~n"
@@ -235,9 +235,9 @@ downstream_connections() ->
 build_urls(Host, Port, Secret, Protocols) -> 
   io_lib:format("mtproto_proxy_app     build_urls ~n"),
     MkUrl = fun(ProtoSecret) -> 
-  io_lib:format("mtproto_proxy_app     decode_none_test ~n"),
+  io_lib:format("mtproto_proxy_app     decode_none_test ~s","223344"),
                     io_lib:format(%%-----yhb  org
-                      "https://t.me/proxy?server=~s&port=~w&secret=~s",
+                      "https://111111t.me/proxy?server=~s&port=~w&secret=~s",
                       [Host, Port, ProtoSecret])
             end,
     UrlTypes = lists:usort(
