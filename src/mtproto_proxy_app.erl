@@ -17,7 +17,6 @@
          build_urls/4,
          get_port_secret/1]).
 
--define(log, macro_body).
 -define(APP, mtproto_proxy).
 
 -include_lib("hut/include/hut.hrl").
@@ -54,12 +53,9 @@ stop(_State) ->
 config_change(Changed, New, Removed) -> 
   %%io_lib:format("mtproto_proxy_app     config_change ~n"),
     %% app's env is already updated when this callback is called
-    ok = lists:foreach(fun(K) -> 
-	config_changed(removed, K, []) end, Removed),
-    ok = lists:foreach(fun({K, V}) -> 
-	config_changed(changed, K, V) end, Changed),
-    ok = lists:foreach(fun({K, V}) -> 
-	config_changed(new, K, V) end, New).
+    ok = lists:foreach(fun(K) -> config_changed(removed, K, []) end, Removed),
+    ok = lists:foreach(fun({K, V}) -> config_changed(changed, K, V) end, Changed),
+    ok = lists:foreach(fun({K, V}) -> config_changed(new, K, V) end, New).
 
 %%--------------------------------------------------------------------
 %% Other APIs
@@ -93,7 +89,7 @@ diff_env(NewEnv, OldEnv) ->
     AddKeys = ordsets:subtract(NewKeySet, OldKeySet),
     ChangedKeys =
         lists:filter(
-          fun(K) -> 
+          fun(K) ->
                   maps:get(K, NewEnvMap) =/= maps:get(K, OldEnvMap)
           end, ordsets:intersection(OldKeySet, NewKeySet)),
     {[{K, maps:get(K, NewEnvMap)} || K <- ChangedKeys],
@@ -102,8 +98,8 @@ diff_env(NewEnv, OldEnv) ->
 
 
 %% @doc List of ranch listeners running mtproto_proxy
--spec mtp_listeners() ->   [tuple()].
-mtp_listeners() -> 
+-spec mtp_listeners() -> [tuple()].
+mtp_listeners() ->
   %%io_lib:format("mtproto_proxy_app     mtp_listeners2 ~n"),
     lists:filter(
       fun({_Name, Opts}) -> 
@@ -113,11 +109,11 @@ mtp_listeners() ->
 
 
 %% @doc Currently running listeners in a form of proxy_port()
--spec running_ports() ->   [proxy_port()].
-running_ports() -> 
+-spec running_ports() -> [proxy_port()].
+running_ports() ->
   %%io_lib:format("mtproto_proxy_app     running_ports2 ~n"),
     lists:map(
-      fun({Name, Opts}) -> 
+      fun({Name, Opts}) ->
               #{protocol_options := ProtoOpts,
                 ip := Ip,
                 port := Port} = maps:from_list(Opts),
@@ -135,7 +131,7 @@ running_ports() ->
       end, mtp_listeners()).
 
 -spec get_port_secret(atom()) -> {ok, binary()} | not_found.
-get_port_secret(Name) -> 
+get_port_secret(Name) ->
   %%io_lib:format("mtproto_proxy_app     get_port_secret2 ~n"),
     case [Secret
           || #{name := PortName, secret := Secret} <- application:get_env(?APP, ports, []),
@@ -149,8 +145,8 @@ get_port_secret(Name) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
--spec start_proxy(proxy_port()) ->  {ok, pid()}.
-start_proxy(#{name := Name, port := Port, secret := Secret, tag := Tag} = P) -> 
+-spec start_proxy(proxy_port()) -> {ok, pid()}.
+start_proxy(#{name := Name, port := Port, secret := Secret, tag := Tag} = P) ->
   %%io_lib:format("mtproto_proxy_app     start_proxy2 ~n"),
     ListenIpStr = maps:get(
                     listen_ip, P,
@@ -245,11 +241,11 @@ build_urls(Host, Port, Secret, Protocols) ->
                               (Other) -> Other
                            end, Protocols)),
     lists:map(
-      fun(mtp_fake_tls) -> 
+      fun(mtp_fake_tls) ->
               Domain = <<"s3.amazonaws.com">>,
               ProtoSecret = mtp_fake_tls:format_secret_hex(Secret, Domain),
               MkUrl(ProtoSecret);
-         (mtp_secure) -> 
+         (mtp_secure) ->
               ProtoSecret = ["dd", Secret],
               MkUrl(ProtoSecret);
          (normal) ->
@@ -257,12 +253,11 @@ build_urls(Host, Port, Secret, Protocols) ->
       end, UrlTypes).
 
 -ifdef(TEST).
-report(Fmt, Args) -> 
-  %%io_lib:format("~p",["mtproto_proxy_app     report1 \n"]),
+report(Fmt, Args) ->
     ?log(debug, Fmt, Args).
 -else.
 report(Fmt, Args) ->
-  io_lib:format(Fmt ++ "12345000\n", Args),
+    io:format(Fmt ++ "2233\n", Args),
     ?log(info, Fmt, Args).
 -endif.
 
