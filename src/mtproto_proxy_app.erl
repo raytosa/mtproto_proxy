@@ -74,7 +74,7 @@ reload_config() ->
     config_change(Changed, New, Removed).
 
 read_sys_config() -> 
-  io_lib:format("mtproto_proxy_app     read_sys_config ~n"),
+  %%io_lib:format("mtproto_proxy_app     read_sys_config ~n"),
     {ok, [[File]]} = init:get_argument(config),
     {ok, [Data]} = file:consult(File),
     proplists:get_value(?APP, Data, []).
@@ -100,7 +100,7 @@ diff_env(NewEnv, OldEnv) ->
 %% @doc List of ranch listeners running mtproto_proxy
 -spec mtp_listeners() -> [tuple()].
 mtp_listeners() ->
-    io_lib:format("mtproto_proxy_app     mtp_listeners2 ~n"),
+    %%io_lib:format("mtproto_proxy_app     mtp_listeners2 ~n"),
     lists:filter(
       fun({_Name, Opts}) -> 
               proplists:get_value(protocol, Opts) == mtp_handler
@@ -232,7 +232,7 @@ build_urls(Host, Port, Secret, Protocols) ->
     MkUrl = fun(ProtoSecret) -> 
   %%io_lib:format("mtproto_proxy_app     decode_none_test ~s","223344"),
                     io_lib:format(%%-----yhb  org
-                      "https://111111t.me/proxy?server=~s&port=~w&secret=~s",
+                      "https://t.me/proxy?server=~s&port=~w&secret=~s",
                       [Host, Port, ProtoSecret])
             end,
     UrlTypes = lists:usort(
@@ -257,7 +257,7 @@ report(Fmt, Args) ->
     ?log(debug, Fmt, Args).
 -else.
 report(Fmt, Args) ->
-    io:format(Fmt ++ "2233\n", Args),
+    io:format(Fmt ++ "xxxx\n", Args),
     ?log(info, Fmt, Args).
 -endif.
 

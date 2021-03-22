@@ -93,8 +93,8 @@ encode_handshake({handshake, SenderPID, PeerPID}) ->
 %% See mtproto/mtproto-proxy.c:process_client_packet
 -spec decode_packet(binary()) ->
    packet() | error.
-decode_packet(<<?RPC_PROXY_ANS, _AnsFlags:4/binary, ConnId:64/signed-little, Data/binary>>) -> 
-  io:format("mtp_rpc      decode_packet2 ~n ~p ~n ~p ~n ~p ~n",[proxy_ans,ConnId,Data]),
+decode_packet(<<?RPC_PROXY_ANS, _AnsFlags:4/binary, ConnId:64/signed-little, Data/binary>>) ->
+    %%ok%% io:format("mtp_rpc      decode_packet2 ~n ~p ~n ~p ~n ~p ~n",[proxy_ans,ConnId,Data]),
     %% mtproto/mtproto-proxy.c:client_send_message
     {proxy_ans, ConnId, Data};
 decode_packet(<<?RPC_CLOSE_EXT, ConnId:64/signed-little>>) -> 

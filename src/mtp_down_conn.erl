@@ -99,7 +99,7 @@ shutdown(Conn) ->
     %%io_lib:format("mtp_down_conn      shutdown ~n"),
     gen_server:cast(Conn, shutdown).
 
-%% To be called by upstream
+%% To be called by upstream  上行数据
 -spec send(handle(), iodata()) -> ok | {error, unknown_upstream}.
 send(Conn, Data) ->
     %%io_lib:format("mtp_down_conn      send ~n"),
@@ -174,6 +174,9 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, dc_id = DcId} = S) ->
     mtp_metric:count_inc([?APP, received, downstream, bytes], byte_size(Data), #{labels => [DcId]}),
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], byte_size(Data), #{labels => [downstream]}),
     {ok, S1} = handle_downstream_data(Data, S),
+
+    io:format("mtp_down_conn      handle_info 1 ~n ~p: ~p~n", [Data]),
+
     activate_if_no_overflow(S1),
     {noreply, S1};
 handle_info({tcp_closed, Sock}, #state{sock = Sock} = State) ->
@@ -223,7 +226,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% Send packet from upstream to downstream
 handle_send(Data, Upstream, #state{upstreams = Ups,
                                    addr_bin = ProxyAddr} = St) ->
-    io:format("mtp_down_conn      handle_send  ~p ~n",[Data]),
+    %%ok%%  io:format("mtp_down_conn      handle_send  ~p ~n",[Data]),
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
