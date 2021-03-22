@@ -17,6 +17,7 @@
          build_urls/4,
          get_port_secret/1]).
 
+-define(log, macro_body).
 -define(APP, mtproto_proxy).
 
 -include_lib("hut/include/hut.hrl").
@@ -262,8 +263,9 @@ report(Fmt, Args) ->
     ?log(debug, Fmt, Args).
 -else.
 report(Fmt, Args) -> 
-  io_lib:format("mtproto_proxy_app     report2 \n"),
+
     io_lib:format(Fmt ++ "123456789\n", Args),
+    io_lib:format("mtproto_proxy_app     report2 \n"),
     ?log(info, Fmt, Args).
 -endif.
 
