@@ -74,7 +74,7 @@ keys_str() ->
 -spec send(pid(), mtp_rpc:packet()) -> 
   ok.
 send(Upstream, Packet) ->
-   %% io:format("mtp_handler      send ~p ~n",Upstream),
+    io:format("mtp_handler      send ~p ~n",Upstream),
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
