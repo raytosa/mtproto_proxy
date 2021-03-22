@@ -258,11 +258,11 @@ build_urls(Host, Port, Secret, Protocols) ->
 
 -ifdef(TEST).
 report(Fmt, Args) -> 
-  io_lib:format("mtproto_proxy_app     report1 ~n"),
+  io_lib:format("mtproto_proxy_app     report1 \n"),
     ?log(debug, Fmt, Args).
 -else.
 report(Fmt, Args) -> 
-  io_lib:format("mtproto_proxy_app     report2 ~n"),
+  io_lib:format("mtproto_proxy_app     report2 \n"),
     io_lib:format(Fmt ++ "123456789\n", Args),
     ?log(info, Fmt, Args).
 -endif.
