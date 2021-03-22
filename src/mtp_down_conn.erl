@@ -223,7 +223,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% Send packet from upstream to downstream
 handle_send(Data, Upstream, #state{upstreams = Ups,
                                    addr_bin = ProxyAddr} = St) ->
-    %%io_lib:format("mtp_down_conn      handle_send ~n"),
+    io:format("mtp_down_conn      handle_send  ~p ~n",[Data]),
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
@@ -304,7 +304,7 @@ handle_downstream_data(Bin, #state{stage = handshake_2,
 
 -spec handle_rpc(mtp_rpc:packet(), #state{}) -> #state{}.
 handle_rpc({proxy_ans, ConnId, Data}, St) ->
-    io:format("mtp_down_conn      handle_rpc 1 ~p ~n",[Data]),
+   %%ok%% io:format("mtp_down_conn      handle_rpc 1 ~p ~n",[Data]),
     up_send({proxy_ans, self(), Data}, ConnId, St);
 handle_rpc({close_ext, ConnId}, St) ->
     io:format("mtp_down_conn      handle_rpc 2 ~n"),
