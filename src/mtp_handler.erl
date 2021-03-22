@@ -63,9 +63,7 @@
 
 %% APIs
 
-start_link(Ref, _Socket, Transport, Opts) ->  
-  io_lib:format("mtp_handler      start_link ~n"),
-    io:format("mtp_handler      start_link ~n"),
+start_link(Ref, _Socket, Transport, Opts) ->
     {ok, proc_lib:spawn_link(?MODULE, ranch_init, [{Ref, Transport, Opts}])}.
 
 keys_str() -> 
