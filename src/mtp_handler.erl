@@ -73,8 +73,7 @@ keys_str() ->
 
 -spec send(pid(), mtp_rpc:packet()) -> 
   ok.
-send(Upstream, Packet) -> 
-  io_lib:format("mtp_handler      send ~n"),
+send(Upstream, Packet) ->
     io:format("mtp_handler      send ~n"),
     gen_server:cast(Upstream, Packet).
 
