@@ -357,8 +357,7 @@ up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
             ok = mtp_handler:send(Upstream, Packet),
             case Packet of
                 {proxy_ans, _, Data} ->
-                    non_ack_bump(Upstream, iolist_size(Data), St),
-                    io:format("mtp_down_conn      up_send  --- ~p  ~n~p ~n",[iolist_size(Data),Data]);
+                    non_ack_bump(Upstream, iolist_size(Data), St);%%,                    io:format("mtp_down_conn      up_send  --- ~p  ~n~p ~n",[iolist_size(Data),Data]);
                 _ ->
                     St
             end;
