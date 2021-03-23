@@ -190,9 +190,10 @@ handle_cast(Other, State) ->
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
                                       listener = Listener, addr = {Ip, _}} = S) -> 
-  io:format("mtp_handler      handle_info ~n"),
+
     %% client -> proxy
     Size = byte_size(Data),
+    io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], Size, #{labels => [upstream]}),
     try handle_upstream_data(Data, S) of
