@@ -148,7 +148,7 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off}
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
 
 
-    io:format("mtp_handler      handle_cast 1  ~n~p  ~n~p ~n",[iolist_size(Data),Data]),
+    io:format("mtp_handler      handle_cast1  --- ~p  ~n~p ~n",[iolist_size(Data),Data]),
 
 
 
@@ -203,7 +203,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
 
     %%%%%%ok%%%%%%   pc---->mtprox  终端发送给代理的数据
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
-    io:format("mtp_handler      handle_info  ~n"),
+    io:format("mtp_handler      handle_info  --- ~p ~n",[Size]),
 
 
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
