@@ -109,7 +109,7 @@ send(Conn, Data) ->
 
 -spec ack(handle(), pos_integer(), pos_integer()) -> ok.
 ack(Conn, Count, Size) ->
-    io:format("mtp_down_conn      ack --- ~p == ~p ~n ",[Count,Size]),
+  %%%%%%%  io:format("mtp_down_conn      ack --- ~p == ~p ~n ",[Count,Size]),
     gen_server:cast(Conn, {ack, self(), Count, Size}).
 
 -spec set_config(handle(), atom(), any()) -> {ok, OldValue :: any()} | ignored.
@@ -340,7 +340,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
       [?APP, downstream_send_duration, seconds],
       fun() ->
               ok = gen_tcp:send(Sock, Encoded),
-         io:format("mtp_down_conn      down_send ~n"),%%io:format("mtp_down_conn      down_send ---~p~n  ~p  ~n",  [byte_size(Encoded),Encoded]),
+         io:format("mtp_down_conn      down_send ~p  ~n",  [iolist_size(Encoded)]),%%io:format("mtp_down_conn      down_send ---~p~n  ~p  ~n",  [byte_size(Encoded),Encoded]),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
                 iolist_size(Encoded), #{labels => [DcId]})
