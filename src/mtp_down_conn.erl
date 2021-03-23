@@ -334,7 +334,8 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %%io_lib:format("mtp_down_conn      down_send ~n"),
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
-     io:format("mtp_down_conn      down_send  ~n  ~p --- ~n",[Encoded]),
+     io:format("mtp_down_conn      down_send  ~n  ~p --- ~n",
+         [binary_to_list(iolist_to_binary([io_lib:format("~2.16.0b", [S]) || S <- binary_to_list(Encoded)]))]),
     %%ok%% io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
 
     mtp_metric:rt(
