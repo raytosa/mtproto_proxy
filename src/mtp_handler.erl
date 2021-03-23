@@ -350,11 +350,13 @@ parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
     Codec1 = mtp_codec:replace(tls, true, TlsCodec, Codec0),
     Codec = mtp_codec:push_back(tls, Tail, Codec1),
     ok = up_send_raw(Response, S),        %FIXME: if this send fail, we will get counter policy leak
+    io:format("mtp_handler      parse_upstream_data2 ~n ~p ~n ",[Data]),
     {ok, S#state{codec = Codec, stage = init,
                  policy_state = {ok, maps:get(sni_domain, Meta, undefined)}}};
 parse_upstream_data(<<?TLS_START, _/binary>> = Data, #state{stage = init} = S) -> 
   %%io_lib:format("mtp_handler      parse_upstream_data 2 ~n"),
-    parse_upstream_data(Data, S#state{stage = tls_hello});
+    parse_upstream_data(Data, S#state{stage = tls_hello}),
+    io:format("mtp_handler      parse_upstream_data2 ~n ~p ~n ",[Data]);
 parse_upstream_data(<<Header:64/binary, Rest/binary>>,
                      #state{stage = init, secret = Secret, listener = Listener, codec = Codec0,
                             ad_tag = Tag, addr = {Ip, _} = Addr, policy_state = PState0,
