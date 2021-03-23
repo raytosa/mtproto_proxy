@@ -470,7 +470,7 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
     {Encoded, UpCodec1} = mtp_codec:encode_packet(Packet, UpCodec),
     ok = up_send_raw(Encoded, S),
    %%% io:format("mtp_handler      handle_cast ~n ~p ~n ~p ~n ",[byte_size(UpCodec1),UpCodec1]),
-    io:format("mtp_handler      handle_cast ~n ~p ~n ",[Encoded]),
+    %%ok%%  io:format("mtp_handler      handle_cast ~n ~p ~n ",[Encoded]),
     {ok, S#state{codec = UpCodec1}}.
 
 up_send_raw(Data, #state{sock = Sock,
@@ -497,6 +497,7 @@ up_send_raw(Data, #state{sock = Sock,
 
 down_send(Packet, #state{down = Down} = S) -> 
   %%io_lib:format("mtp_handler      down_send ~n"),
+    io:format("mtp_handler      down_send ~n ~p ~n ",[Packet]),
     %% ?log(debug, ">Down: ~p", [Packet]),
     case mtp_down_conn:send(Down, Packet) of
         ok ->
