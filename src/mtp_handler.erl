@@ -146,6 +146,9 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off}
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
+
+    io:format("mtp_handler      handle_cast ~n ~p ~n ~p ~n ",[byte_size(Data),Data]),
+
     maybe_check_health(bump_timer(S1));
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
