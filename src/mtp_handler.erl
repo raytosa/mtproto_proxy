@@ -503,7 +503,7 @@ up_send_raw(Data, #state{sock = Sock,
               end, #{labels => [Listener]}).
 
 down_send(Packet, #state{down = Down} = S) -> 
-  io:format("mtp_handler      down_send ~n"),
+ %%up io:format("mtp_handler      down_send ~n"),
     %%ok%%   io:format("mtp_handler      down_send ~n ~p ~n ",[Packet]),
     %% ?log(debug, ">Down: ~p", [Packet]),
     case mtp_down_conn:send(Down, Packet) of

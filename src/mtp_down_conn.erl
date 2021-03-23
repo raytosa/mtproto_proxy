@@ -104,7 +104,7 @@ shutdown(Conn) ->
 send(Conn, Data) ->
    % io:format("mtp_down_conn      send ~n"),
     %%ok%% io:format("mtp_down_conn      send --- ~p ~n ~p ~n ",[byte_size(Data),Data]),
-    io:format("mtp_down_conn      send --- ~p ~n",[byte_size(Data)]),
+  %%up  io:format("mtp_down_conn      send --- ~p ~n",[byte_size(Data)]),
     gen_server:call(Conn, {send, Data}, ?SEND_TIMEOUT * 2).
 
 -spec ack(handle(), pos_integer(), pos_integer()) -> ok.
@@ -336,7 +336,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %%io_lib:format("mtp_down_conn      down_send ~n"),
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
-    %%ok%%  io:format("mtp_down_conn      down_send  ~n  ~p --- ~n",  [Encoded]),
+     io:format("mtp_down_conn      down_send  ~n  ~p --- ~n",  [Encoded]),
     %%ok%% io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
 
     mtp_metric:rt(
