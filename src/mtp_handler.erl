@@ -74,7 +74,7 @@ keys_str() ->
 -spec send(pid(), mtp_rpc:packet()) -> 
   ok.
 send(Upstream, Packet) ->
-  %%    io:format("mtp_handler      send ~n"),
+    io:format("mtp_handler      send ~n"),
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
@@ -136,12 +136,12 @@ init({Socket, Transport, [Name, Secret, Tag]}) ->
     end.
 
 handle_call(_Request, _From, State) -> 
-  %%io_lib:format("mtp_handler      handle_call ~n"),
+    io:format("mtp_handler      handle_call ~n"),
     Reply = ok,
     {reply, Reply, State}.
 
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off} = S) -> 
-  %%io_lib:format("mtp_handler      handle_cast 1 ~n"),
+    io:format("mtp_handler      handle_cast 1 ~n"),
     %% telegram server -> proxy
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
@@ -150,7 +150,7 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off}
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
                    addr = {Ip, _}} = S) when Filter =/= off ->
-	%%io_lib:format("mtp_handler      handle_cast 2 ~n"),
+	io:format("mtp_handler      handle_cast 2 ~n"),
     %% telegram server -> proxy
     %% Server replied with server error; it might be another kind of replay attack;
     %% Don't send this packet to client so proxy won't be fingerprinted
@@ -163,7 +163,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
          on -> S
      end};
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filter} = S) when Filter =/= off ->
-	%%io_lib:format("mtp_handler      handle_cast 3~n"),
+	io:format("mtp_handler      handle_cast 3~n"),
     %% telegram server -> proxy
     %% Normal data packet
     %% srv_error_filter is 'on' or srv_error_filter is 'first' and it's 1st server packet
@@ -175,22 +175,22 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filt
          end,
     maybe_check_health(bump_timer(S2));
 handle_cast({close_ext, Down}, #state{down = Down, sock = USock, transport = UTrans} = S) -> 
-  %%io_lib:format("mtp_handler      handle_cast 4 ~n"),
+  io:format("mtp_handler      handle_cast 4 ~n"),
     ?log(debug, "asked to close connection by downstream"),
     ok = UTrans:close(USock),
     {stop, normal, S#state{down = undefined}};
 handle_cast({simple_ack, Down, Confirm}, #state{down = Down} = S) -> 
-  %%io_lib:format("mtp_handler      handle_cast 5 ~n"),
+  io:format("mtp_handler      handle_cast 5 ~n"),
     ?log(info, "Simple ack: ~p, ~p", [Down, Confirm]),
     {noreply, S};
 handle_cast(Other, State) -> 
-  %%io_lib:format("mtp_handler      handle_cast 6 ~n"),
+  io:format("mtp_handler      handle_cast 6 ~n"),
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, State}.
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
                                       listener = Listener, addr = {Ip, _}} = S) -> 
-  %%io_lib:format("mtp_handler      handle_info ~n"),
+  io:format("mtp_handler      handle_info ~n"),
     %% client -> proxy
     Size = byte_size(Data),
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
@@ -206,16 +206,16 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
             {stop, normal, maybe_close_down(S)}
     end;
 handle_info({tcp_closed, Sock}, #state{sock = Sock} = S) -> 
-  %%io_lib:format("mtp_handler      handle_info 1 ~n"),
+ io:format("mtp_handler      handle_info 1 ~n"),
     ?log(debug, "upstream sock closed"),
     {stop, normal, maybe_close_down(S)};
 handle_info({tcp_error, Sock, Reason}, #state{sock = Sock} = S) -> 
-  %%io_lib:format("mtp_handler      handle_info 2 ~n"),
+  io:format("mtp_handler      handle_info 2 ~n"),
     ?log(warning, "upstream sock error: ~p", [Reason]),
     {stop, normal, maybe_close_down(S)};
 
 handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = Listener} = S) -> 
-  %%io_lib:format("mtp_handler      handle_info 3  ~n"),
+  io:format("mtp_handler      handle_info 3  ~n"),
     case gen_timeout:is_expired(Timer) of
         true when TState == stop;
                   TState == init ->
@@ -230,14 +230,14 @@ handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = List
             {noreply, S#state{timer = Timer1}}
     end;
 handle_info(Other, S) -> 
-  %%io_lib:format("mtp_handler      handle_info 4 ~n"),
+ io:format("mtp_handler      handle_info 4 ~n"),
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, S}.
 
 terminate(_Reason, #state{started_at = Started, listener = Listener,
                           addr = {Ip, _}, policy_state = PolicyState,
                           sock = Sock, transport = Trans} = S) -> 
-  %%io_lib:format("mtp_handler      terminate ~n"),
+  io:format("mtp_handler      terminate ~n"),
     case PolicyState of
         {ok, TlsDomain} ->
             try mtp_policy:dec(
@@ -311,7 +311,7 @@ state_timeout(stop) ->
 %% Handle telegram client -> proxy stream
 handle_upstream_data(Bin, #state{stage = tunnel,
                                   codec = UpCodec} = S) -> 
-  %%io_lib:format("mtp_handler      handle_upstream_data ~n"),
+  io:format("mtp_handler      handle_upstream_data ~n"),
     {ok, S3, UpCodec1} =
         mtp_codec:fold_packets(
           fun(Decoded, S1, Codec1) -> 
@@ -324,7 +324,7 @@ handle_upstream_data(Bin, #state{stage = tunnel,
           end, S, Bin, UpCodec),
     {ok, S3#state{codec = UpCodec1}};
 handle_upstream_data(Bin, #state{codec = Codec0} = S0) -> 
-  %%io_lib:format("mtp_handler      handle_upstream_data 2 ~n"),
+ io:format("mtp_handler      handle_upstream_data 2 ~n"),
     {ok, S, Codec} =
         mtp_codec:fold_packets_if(
           fun(Decoded, S1, Codec1) -> 
@@ -342,7 +342,7 @@ parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
                      #state{stage = tls_hello, secret = Secret, codec = Codec0,
                             addr = {Ip, _}, listener = Listener} = S) when
       byte_size(AllData) >= (?TLS_CLIENT_HELLO_LEN + 5) -> 
-  %%io_lib:format("mtp_handler      parse_upstream_data 1 ~n"),
+  io:format("mtp_handler      parse_upstream_data 1 ~n"),
     assert_protocol(mtp_fake_tls),
     <<Data:(?TLS_CLIENT_HELLO_LEN + 5)/binary, Tail/binary>> = AllData,
     {ok, Response, Meta, TlsCodec} = mtp_fake_tls:from_client_hello(Data, Secret),
@@ -354,14 +354,14 @@ parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
     {ok, S#state{codec = Codec, stage = init,
                  policy_state = {ok, maps:get(sni_domain, Meta, undefined)}}};
 parse_upstream_data(<<?TLS_START, _/binary>> = Data, #state{stage = init} = S) -> 
-  %%io_lib:format("mtp_handler      parse_upstream_data 2 ~n"),
+  io:format("mtp_handler      parse_upstream_data 2 ~n"),
     parse_upstream_data(Data, S#state{stage = tls_hello}),
     io:format("mtp_handler      parse_upstream_data2 ~n ~p ~n ",[Data]);
 parse_upstream_data(<<Header:64/binary, Rest/binary>>,
                      #state{stage = init, secret = Secret, listener = Listener, codec = Codec0,
                             ad_tag = Tag, addr = {Ip, _} = Addr, policy_state = PState0,
                             sock = Sock, transport = Transport} = S) -> 
-  %%io_lib:format("mtp_handler      parse_upstream_data3 ~n"),
+  io:format("mtp_handler      parse_upstream_data3 ~n"),
     {TlsHandshakeDone, _} = mtp_codec:info(tls, Codec0),
     AllowedProtocols = allowed_protocols(),
     %% If the only enabled protocol is fake-tls and tls handshake haven't been performed yet - raise
@@ -410,7 +410,7 @@ parse_upstream_data(<<Header:64/binary, Rest/binary>>,
             error({protocol_error, Reason, Header})
     end;
 parse_upstream_data(Bin, #state{stage = Stage, codec = Codec0} = S) when Stage =/= tunnel ->
-	%%io_lib:format("mtp_handler      parse_upstream_data ~n"),
+	io:format("mtp_handler      parse_upstream_data ~n"),
     Codec = mtp_codec:push_back(first, Bin, Codec0),
     {incomplete, S#state{codec = Codec}}.
 
@@ -465,7 +465,7 @@ check_policy(Listener, Ip, Domain) ->
     end.
 
 up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) -> 
-  %%io_lib:format("mtp_handler      up_send ~n"),
+  io:format("mtp_handler      up_send ~n"),
     %% ?log(debug, ">Up: ~p", [Packet]),
     {Encoded, UpCodec1} = mtp_codec:encode_packet(Packet, UpCodec),
     ok = up_send_raw(Encoded, S),
@@ -496,8 +496,8 @@ up_send_raw(Data, #state{sock = Sock,
               end, #{labels => [Listener]}).
 
 down_send(Packet, #state{down = Down} = S) -> 
-  %%io_lib:format("mtp_handler      down_send ~n"),
-    io:format("mtp_handler      down_send ~n ~p ~n ",[Packet]),
+  io:format("mtp_handler      down_send ~n"),
+    %%ok%%   io:format("mtp_handler      down_send ~n ~p ~n ",[Packet]),
     %% ?log(debug, ">Down: ~p", [Packet]),
     case mtp_down_conn:send(Down, Packet) of
         ok ->
@@ -507,7 +507,7 @@ down_send(Packet, #state{down = Down} = S) ->
     end.
 
 handle_unknown_upstream(#state{down = Down, sock = USock, transport = UTrans} = S) -> 
-  %%io_lib:format("mtp_handler      handle_unknown_upstream ~n"),
+  io:format("mtp_handler      handle_unknown_upstream ~n"),
     %% there might be a race-condition between packets from upstream socket and
     %% downstream's 'close_ext' message. Most likely because of slow up_send
     ok = UTrans:close(USock),
