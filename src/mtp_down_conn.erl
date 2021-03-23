@@ -103,14 +103,12 @@ shutdown(Conn) ->
 -spec send(handle(), iodata()) -> ok | {error, unknown_upstream}.
 send(Conn, Data) ->
    % io:format("mtp_down_conn      send ~n"),
-    %%ok%%
-    io:format("mtp_down_conn      send --- ~p ~n ~p ~n ",[byte_size(Data),Data]),
+    %%ok%% io:format("mtp_down_conn      send --- ~p ~n ~p ~n ",[byte_size(Data),Data]),
+    io:format("mtp_down_conn      send --- ~p ~n",[byte_size(Data)]),
     gen_server:call(Conn, {send, Data}, ?SEND_TIMEOUT * 2).
 
 -spec ack(handle(), pos_integer(), pos_integer()) -> ok.
 ack(Conn, Count, Size) ->
-
-
     io:format("mtp_down_conn      ack --- ~p == ~p ~n ",[Count,Size]),
     gen_server:cast(Conn, {ack, self(), Count, Size}).
 
@@ -359,7 +357,8 @@ up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
             ok = mtp_handler:send(Upstream, Packet),
             case Packet of
                 {proxy_ans, _, Data} ->
-                    non_ack_bump(Upstream, iolist_size(Data), St);
+                    non_ack_bump(Upstream, iolist_size(Data), St),
+                    io:format("mtp_down_conn      up_send  --- ~p  ~n~p ~n",[iolist_size(Data),Data]);
                 _ ->
                     St
             end;
@@ -451,7 +450,7 @@ activate_if_no_overflow(_) ->
 handle_ack(Upstream, Count, Size, #state{non_ack_count = Cnt,
                                          non_ack_bytes = Oct,
                                          upstreams = Ups} = St) ->
-    io:format("mtp_down_conn      handle_ack --- ~p == ~p ~n ",[Count,Size]),
+   %%% io:format("mtp_down_conn      handle_ack --- ~p == ~p ~n ",[Count,Size]),
     case maps:get(Upstream, Ups, undefined) of
         undefined ->
             %% all upstream's counters should already be handled by cleanup_upstream

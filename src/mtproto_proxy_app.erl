@@ -257,7 +257,7 @@ report(Fmt, Args) ->
     ?log(debug, Fmt, Args).
 -else.
 report(Fmt, Args) ->
-    io:format(Fmt ++ "xxxx\n", Args),
+    io:format(Fmt ++ "\n", Args),
     ?log(info, Fmt, Args).
 -endif.
 

@@ -142,22 +142,17 @@ handle_call(_Request, _From, State) ->
 
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off} = S) -> 
 
-    %% telegram server -> proxy
+    %% telegram server -> proxy   tg服务器到代理
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
-
-
-    io:format("mtp_handler      handle_cast1  --- ~p  ~n~p ~n",[iolist_size(Data),Data]),
-
-
-
+   %% io:format("mtp_handler      handle_cast1  --- ~p  ~n~p ~n",[iolist_size(Data),Data]),
     maybe_check_health(bump_timer(S1));
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
                    addr = {Ip, _}} = S) when Filter =/= off ->
 	io:format("mtp_handler      handle_cast 2 ~n"),
-    %% telegram server -> proxy
+    %% telegram server -> proxy      tg服务器到代理
     %% Server replied with server error; it might be another kind of replay attack;
     %% Don't send this packet to client so proxy won't be fingerprinted
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
@@ -171,7 +166,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
      end};
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filter} = S) when Filter =/= off ->
 	io:format("mtp_handler      handle_cast 3~n"),
-    %% telegram server -> proxy
+    %% telegram server -> proxy    tg服务器到代理
     %% Normal data packet
     %% srv_error_filter is 'on' or srv_error_filter is 'first' and it's 1st server packet
     {ok, S1} = up_send(Data, S),
@@ -200,7 +195,6 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
 
     %% client -> proxy
     Size = byte_size(Data),
-
     %%%%%%ok%%%%%%   pc---->mtprox  终端发送给代理的数据
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
     io:format("mtp_handler      handle_info  --- ~p ~n",[Size]),
@@ -210,7 +204,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], Size, #{labels => [upstream]}),
     try handle_upstream_data(Data, S) of
         {ok, S1} ->
-            ok = Transport:setopts(Sock, [{active, once}]),
+            ok = Transport:setopts(Sock, [{active, once}]),%%%%% 是否是向终端发送ACK？？？
             %% Consider checking health here as well
             {noreply, bump_timer(S1)}
     catch error:{protocol_error, Type, Extra} ->
@@ -219,16 +213,16 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
             {stop, normal, maybe_close_down(S)}
     end;
 handle_info({tcp_closed, Sock}, #state{sock = Sock} = S) -> 
- io:format("mtp_handler      handle_info 1 ~n"),
+ io:format("mtp_handler      handle_info tcp_closed ~n"),
     ?log(debug, "upstream sock closed"),
     {stop, normal, maybe_close_down(S)};
 handle_info({tcp_error, Sock, Reason}, #state{sock = Sock} = S) -> 
-  io:format("mtp_handler      handle_info 2 ~n"),
+  io:format("mtp_handler      handle_info tcp_error ~n"),
     ?log(warning, "upstream sock error: ~p", [Reason]),
     {stop, normal, maybe_close_down(S)};
 
 handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = Listener} = S) -> 
-  io:format("mtp_handler      handle_info 3  ~n"),
+  io:format("mtp_handler      handle_info timeout  ~n"),
     case gen_timeout:is_expired(Timer) of
         true when TState == stop;
                   TState == init ->
@@ -324,7 +318,7 @@ state_timeout(stop) ->
 %% Handle telegram client -> proxy stream
 handle_upstream_data(Bin, #state{stage = tunnel,
                                   codec = UpCodec} = S) -> 
-  io:format("mtp_handler      handle_upstream_data ~n"),
+ %%%%% io:format("mtp_handler      handle_upstream_data ~n"),
     {ok, S3, UpCodec1} =
         mtp_codec:fold_packets(
           fun(Decoded, S1, Codec1) -> 
