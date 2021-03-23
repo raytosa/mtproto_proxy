@@ -141,11 +141,17 @@ handle_call(_Request, _From, State) ->
     {reply, Reply, State}.
 
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off} = S) -> 
-    io:format("mtp_handler      handle_cast 1 ~n"),
+
     %% telegram server -> proxy
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
+
+
+    io:format("mtp_handler      handle_cast 1  ~n~p  ~n~p ~n",[iolist_size(Data),Data]),
+
+
+
     maybe_check_health(bump_timer(S1));
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
@@ -155,6 +161,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
     %% Server replied with server error; it might be another kind of replay attack;
     %% Don't send this packet to client so proxy won't be fingerprinted
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
+
     ?log(warning, "~s: protocol_error srv_error_filtered", [inet:ntoa(Ip)]),
     mtp_metric:count_inc([?APP, protocol_error, total], 1, #{labels => [Listener, srv_error_filtered]}),
     {noreply,
@@ -193,7 +200,12 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
 
     %% client -> proxy
     Size = byte_size(Data),
-    io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
+
+    %%%%%%ok%%%%%%   pc---->mtprox  终端发送给代理的数据
+    %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
+    io:format("mtp_handler      handle_info  ~n"),
+
+
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], Size, #{labels => [upstream]}),
     try handle_upstream_data(Data, S) of
