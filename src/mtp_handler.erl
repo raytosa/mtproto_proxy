@@ -213,13 +213,13 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     Size1 = byte_size(RevData),
 
-    io:format("------------------------ ~n~p-  ~n ~n",[Size1]),
+    io:format("~p-------~p-  ~n",[Size,Size1]),
   %%  io:format("------------------------ ~n~p-  ~n  ~p ~n",[Size1,RevData]),
 
 
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], Size, #{labels => [upstream]}),
-    try handle_upstream_data(Data, S) of
+    try handle_upstream_data(RevData, S) of
         {ok, S1} ->
             ok = Transport:setopts(Sock, [{active, once}]),%%%%% 是否是向终端发送ACK？？？
             %% Consider checking health here as well
