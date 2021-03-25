@@ -104,7 +104,11 @@ shutdown(Conn) ->
 send(Conn, Data) ->
    % io:format("mtp_down_conn      send ~n"),
     %%ok%% io:format("mtp_down_conn      send --- ~p ~n ~p ~n ",[byte_size(Data),Data]),
-  %%up  io:format("mtp_down_conn      send --- ~p ~n",[byte_size(Data)]),
+  %%up
+    io:format("mtp_down_conn      send  ~p --- ~p ~n",[ is_list(Data),byte_size(Data)]),
+
+
+
     gen_server:call(Conn, {send, Data}, ?SEND_TIMEOUT * 2).
 
 -spec ack(handle(), pos_integer(), pos_integer()) -> ok.
