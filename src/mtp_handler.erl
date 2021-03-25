@@ -365,7 +365,7 @@ parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
                  policy_state = {ok, maps:get(sni_domain, Meta, undefined)}}};
 parse_upstream_data(<<?TLS_START, _/binary>> = Data, #state{stage = init} = S) -> 
   %%%%%  io:format("mtp_handler      parse_upstream_data 2 ~n"),
-    parse_upstream_data(Data, S#state{stage = tls_hello}),
+    parse_upstream_data(Data, S#state{stage = tls_hello});
     %%%%%  io:format("mtp_handler      parse_upstream_data2 ~n ~p ~n ",[Data]);
 parse_upstream_data(<<Header:64/binary, Rest/binary>>,
                      #state{stage = init, secret = Secret, listener = Listener, codec = Codec0,
