@@ -105,7 +105,7 @@ send(Conn, Data) ->
    % io:format("mtp_down_conn      send ~n"),
     %%ok%% io:format("mtp_down_conn      send --- ~p ~n ~p ~n ",[byte_size(Data),Data]),
   %%up
-    io:format("mtp_down_conn      send  ~p --- ~p ~n",[ is_list(Data),byte_size(Data)]),
+    %%%%%  io:format("mtp_down_conn      send  ~p --- ~p ~n",[ is_list(Data),byte_size(Data)]),
 
 
 
@@ -318,7 +318,7 @@ handle_rpc({proxy_ans, ConnId, Data}, St) ->
    %%ok%% io:format("mtp_down_conn      handle_rpc 1 ~p ~n",[Data]),
     up_send({proxy_ans, self(), Data}, ConnId, St);
 handle_rpc({close_ext, ConnId}, St) ->
-    io:format("mtp_down_conn      handle_rpc 2 ~n"),
+    %%%%%  io:format("mtp_down_conn      handle_rpc 2 ~n"),
     #state{upstreams = Ups,
            upstreams_rev = UpsRev} = St1 = up_send({close_ext, self()}, ConnId, St),
     case maps:take(ConnId, UpsRev) of
@@ -332,7 +332,7 @@ handle_rpc({close_ext, ConnId}, St) ->
             St1
     end;
 handle_rpc({simple_ack, ConnId, Confirm}, S) ->
-    io:format("mtp_down_conn      handle_rpc 3 ~p ~n",[Confirm]),
+    %%%%%  io:format("mtp_down_conn      handle_rpc 3 ~p ~n",[Confirm]),
     up_send({simple_ack, self(), Confirm}, ConnId, S).
 
 -spec down_send(iodata(), #state{}) -> {ok, #state{}}.
