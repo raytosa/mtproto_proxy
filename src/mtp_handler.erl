@@ -190,6 +190,12 @@ handle_cast(Other, State) ->
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, State}.
 
+
+binrev(Binary) ->
+    Size = erlang:size(Binary)*8,
+    <<X:Size/integer-little>> = Binary,
+    <<X:Size/integer-big>>.
+
 handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
                                       listener = Listener, addr = {Ip, _}} = S) -> 
 
@@ -199,8 +205,10 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
     %%%%%  io:format("mtp_handler      handle_info  --- ~p ~n",[Size]),
 
-    io:format("mtp_handler      handle_info  ~n~p-  ~p-  ~p ~n",[Size,is_binary(Data),is_list(Data)]),
-
+    io:format("mtp_handler      handle_info  ~n~p-  ~p-  ~p ~n",[Size,Data]),
+    RevData=binrev(Data),
+    Size1 = byte_size(RevData),
+    io:format("------------------------ ~n~p-  ~p-  ~p ~n",[Size1,RevData]),
 
 
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
