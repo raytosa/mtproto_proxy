@@ -219,6 +219,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
 
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], Size, #{labels => [upstream]}),
+
     try handle_upstream_data(Data, S) of
     %%% try handle_upstream_data(RevData, S) of
         {ok, S1} ->
