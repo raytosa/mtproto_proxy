@@ -208,11 +208,11 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
     %%%%%  io:format("mtp_handler      handle_info  --- ~p ~n",[Size]),
 
-    io:format("mtp_handler      handle_info  ~n~p-  ~p-  ~p ~n",[Size,Data]),
+    io:format("mtp_handler      handle_info  ~n~p- ~n  ~p   ~n",[Size,Data]),
     %RevData=binrev(Data),
     RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     Size1 = byte_size(RevData),
-    io:format("------------------------ ~n~p-  ~p-  ~p ~n",[Size1,RevData]),
+    io:format("------------------------ ~n~p-  ~n  ~p ~n",[Size1,RevData]),
 
 
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
