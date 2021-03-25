@@ -213,7 +213,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     Size1 = byte_size(RevData),
 
-    io:format("------------------------ ~n~p-  ~n ~n",[Size1,]),
+    io:format("------------------------ ~n~p-  ~n ~n",[Size1]),
   %%  io:format("------------------------ ~n~p-  ~n  ~p ~n",[Size1,RevData]),
 
 
