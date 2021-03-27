@@ -200,8 +200,7 @@ handle_cast(Other, State) ->
 %rev(Rest, <<H/binary, Acc/binary>>).
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
-                                      listener = Listener, addr = {Ip, _}} = S) -> 
-
+                                      listener = Listener, addr = {Ip, _}} = S) ->
     %% client -> proxy
     Size = byte_size(Data),
     %%%%%%ok%%%%%%   pc---->mtprox  终端发送给代理的数据
@@ -219,9 +218,8 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
 
     mtp_metric:count_inc([?APP, received, upstream, bytes], Size, #{labels => [Listener]}),
     mtp_metric:histogram_observe([?APP, tracker_packet_size, bytes], Size, #{labels => [upstream]}),
-
-    try handle_upstream_data(Data, S) of
     %%% try handle_upstream_data(RevData, S) of
+    try handle_upstream_data(Data, S) of
         {ok, S1} ->
             ok = Transport:setopts(Sock, [{active, once}]),%%%%% 是否是向终端发送ACK？？？
             %% Consider checking health here as well
@@ -231,18 +229,15 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
             ?log(warning, "~s: protocol_error ~p ~p", [inet:ntoa(Ip), Type, Extra]),
             {stop, normal, maybe_close_down(S)}
     end;
-handle_info({tcp_closed, Sock}, #state{sock = Sock} = S) -> 
- %%%%%  io:format("mtp_handler      handle_info tcp_closed ~n"),
+handle_info({tcp_closed, Sock}, #state{sock = Sock} = S) ->
     ?log(debug, "upstream sock closed"),
     {stop, normal, maybe_close_down(S)};
-handle_info({tcp_error, Sock, Reason}, #state{sock = Sock} = S) -> 
-  %%%%%  io:format("mtp_handler      handle_info tcp_error ~n"),
+handle_info({tcp_error, Sock, Reason}, #state{sock = Sock} = S) ->
     ?log(warning, "upstream sock error: ~p", [Reason]),
     {stop, normal, maybe_close_down(S)};
 
 handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = Listener} = S) -> 
-  %%%%%  io:format("mtp_handler      handle_info timeout  ~n"),
-    case gen_timeout:is_expired(Timer) of
+     case gen_timeout:is_expired(Timer) of
         true when TState == stop;
                   TState == init ->
             mtp_metric:count_inc([?APP, inactive_timeout, total], 1, #{labels => [Listener]}),
@@ -255,8 +250,7 @@ handle_info(timeout, #state{timer = Timer, timer_state = TState, listener = List
             Timer1 = gen_timeout:reset(Timer),
             {noreply, S#state{timer = Timer1}}
     end;
-handle_info(Other, S) -> 
- %%%%%  io:format("mtp_handler      handle_info 4 ~n"),
+handle_info(Other, S) ->
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, S}.
 
@@ -336,8 +330,7 @@ state_timeout(stop) ->
 
 %% Handle telegram client -> proxy stream
 handle_upstream_data(Bin, #state{stage = tunnel,
-                                  codec = UpCodec} = S) -> 
- %%%%% io:format("mtp_handler      handle_upstream_data ~n"),
+                                  codec = UpCodec} = S) ->
     {ok, S3, UpCodec1} =
         mtp_codec:fold_packets(
           fun(Decoded, S1, Codec1) -> 
@@ -349,8 +342,7 @@ handle_upstream_data(Bin, #state{stage = tunnel,
                   {S2, S2#state.codec}
           end, S, Bin, UpCodec),
     {ok, S3#state{codec = UpCodec1}};
-handle_upstream_data(Bin, #state{codec = Codec0} = S0) -> 
- %%%%%  io:format("mtp_handler      handle_upstream_data 2 ~n"),
+handle_upstream_data(Bin, #state{codec = Codec0} = S0) ->
     {ok, S, Codec} =
         mtp_codec:fold_packets_if(
           fun(Decoded, S1, Codec1) -> 

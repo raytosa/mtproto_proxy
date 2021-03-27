@@ -107,7 +107,7 @@ decode_packet(<<?RPC_SIMPLE_ACK, ConnId:64/signed-little, Confirm:4/binary>>) ->
 
 
 encode_packet({data, Msg}, {{ConnId, ClientAddr, ProxyTag}, ProxyAddr}) -> 
-  %%io_lib:format("mtp_rpc      encode_packet1 ~n"),
+  io_lib:format("mtp_rpc      encode_packet1 ~p ~n",[byte_size(ProxyTag)]),
     %% See mtproto/mtproto-proxy.c:forward_mtproto_packet
    
     ((iolist_size(Msg) rem 4) == 0)

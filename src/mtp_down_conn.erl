@@ -234,7 +234,8 @@ code_change(_OldVsn, State, _Extra) ->
 %% Send packet from upstream to downstream
 handle_send(Data, Upstream, #state{upstreams = Ups,
                                    addr_bin = ProxyAddr} = St) ->
-    %%ok%%  io:format("mtp_down_conn      handle_send  ~p ~n",[Data]),
+    %%ok%%
+    io:format("mtp_down_conn      handle_send  ~p ~n",[Data]),
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),

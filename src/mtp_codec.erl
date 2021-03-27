@@ -154,13 +154,11 @@ decode_crypto(Bin, #codec{crypto_buf = Buf} = S) ->
 
 
 decode_packet(<<>>, CryptoSt, CryptoTail, #codec{packet_buf = <<>>} = S) ->
-    %%io_lib:format("mtp_codec      decode_packet`1 ~n"),
     %% Crypto produced nothing and there is nothing in packet buf
     {incomplete, assert_overflow(S#codec{crypto_state = CryptoSt, crypto_buf = CryptoTail})};
 decode_packet(Bin, CryptoSt, CryptoTail, #codec{packet_mod = PacketMod,
                                                 packet_state = PacketSt,
                                                 packet_buf = <<>>} = S) ->
-    %%io_lib:format("mtp_codec      decode_packet`2 ~n"),
     %% Crypto produced smth, and there is nothing in pkt buf
     case PacketMod:try_decode_packet(Bin, PacketSt) of
         {incomplete, PacketSt1} ->
