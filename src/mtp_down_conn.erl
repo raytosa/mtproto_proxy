@@ -132,7 +132,7 @@ init([Pool, DcId]) ->
                 dc_id = DcId}}.
 
 handle_call({send, Data}, {Upstream, _}, State) ->
-    %%io_lib:format("mtp_down_conn      handle_call 1 ~n"),
+    io_lib:format("mtp_down_conn      handle_call 1 ~n"),
     {Res, State1} = handle_send(Data, Upstream, State),
     {reply, Res, State1};
 handle_call({set_config, Name, Value}, _From, State) ->
@@ -239,12 +239,12 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
             SSize = unbound,
-            down_send(Packet,SSize, St),
-            io:format("mtp_down_conn      handle_send  ~p ~n",[SSize]) ;
+            down_send(Packet,SSize, St);
         _ ->
             ?log(warning, "Upstream=~p not found", [Upstream]),
             {{error, unknown_upstream}, St}
-    end.
+    end,
+        io:format("mtp_down_conn      handle_send  ~p ~n",[SSize]) .
 
 %% New upstream connected
 handle_upstream_new(Upstream, Opts, #state{upstreams = Ups,
