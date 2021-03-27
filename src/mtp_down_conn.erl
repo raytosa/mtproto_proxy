@@ -132,7 +132,7 @@ init([Pool, DcId]) ->
                 dc_id = DcId}}.
 
 handle_call({send, Data}, {Upstream, _}, State) ->
-
+    SSize = unbound,
     {Res, SSize,State1} = handle_send(Data, Upstream, State),
     io_lib:format("mtp_down_conn      handle_call 1 ~~p ~n",[SSize]),
     {reply, Res, State1};
