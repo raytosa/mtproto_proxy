@@ -238,7 +238,7 @@ code_change(_OldVsn, State, _Extra) ->
 handle_send(Data, Upstream, #state{upstreams = Ups,
                                    addr_bin = ProxyAddr} = St) ->
     %%ok%%    io:format("mtp_down_conn      handle_send  ~p ~n",[byte_size(Data)]),
-    OouSize = 0,
+
 
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
@@ -246,6 +246,7 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
             down_send(Packet, St);
         _ ->
             ?log(warning, "Upstream=~p not found", [Upstream]),
+            OouSize = 0,
             {{error, unknown_upstream}, OouSize,St}
     end.
 
