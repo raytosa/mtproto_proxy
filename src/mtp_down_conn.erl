@@ -282,7 +282,7 @@ handle_upstream_closed(Upstream, #state{upstreams = Ups,
         error ->
             %% It happens when we get rpc_close_ext
             ?log(info, "Unknown upstream ~p", [Upstream]),
-            {ok,OouSize, St}
+            {ok, St}
     end.
 
 
@@ -352,16 +352,12 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     OouSize = iolist_size(Encoded),
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
-
-        %%io:format("mtp_down_conn      down_send ---~p~n  ~p  ~n",  [byte_size(Encoded),Encoded]),
-
         fun() ->
               ok = gen_tcp:send(Sock, Encoded),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
                   iolist_size(Encoded), #{labels => [DcId]})
       end, #{labels => [DcId]}),
-
     {ok,St#state{codec = Codec1}}.
 
 
