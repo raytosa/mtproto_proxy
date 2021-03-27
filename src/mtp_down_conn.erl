@@ -234,8 +234,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% Send packet from upstream to downstream
 handle_send(Data, Upstream, #state{upstreams = Ups,
                                    addr_bin = ProxyAddr} = St) ->
-    %%ok%%
-    io:format("mtp_down_conn      handle_send  ~p ~n",[Data]),
+    %%ok%%    io:format("mtp_down_conn      handle_send  ~p ~n",[byte_size(Data)]),
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
@@ -343,7 +342,10 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %%ok%% io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
-      fun() ->
+        io:format("mtp_down_conn      down_send ~p  ~n",  [byte_size(Encoded)]),
+        %%io:format("mtp_down_conn      down_send ---~p~n  ~p  ~n",  [byte_size(Encoded),Encoded]),
+
+        fun() ->
               ok = gen_tcp:send(Sock, Encoded),
          %%%%%%io:format("mtp_down_conn      down_send ~p  ~n",  [Encoded]),%%io:format("mtp_down_conn      down_send ---~p~n  ~p  ~n",  [byte_size(Encoded),Encoded]),
               mtp_metric:count_inc(
