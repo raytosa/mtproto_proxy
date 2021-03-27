@@ -345,7 +345,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
     %%ok%% io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
    %% io:format("mtp_down_conn      down_send ~p  ~n",  [byte_size(Encoded)]),
-    OouSize = iolist_size(Encoded),
+    _OouSize = iolist_size(Encoded),
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
 
@@ -355,7 +355,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
               ok = gen_tcp:send(Sock, Encoded),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
-                  OouSize, #{labels => [DcId]})
+                  iolist_size(Encoded), #{labels => [DcId]})
       end, #{labels => [DcId]}),
 
     {ok,St#state{codec = Codec1}}.
