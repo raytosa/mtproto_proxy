@@ -358,7 +358,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
                   OouSize, #{labels => [DcId]})
       end, #{labels => [DcId]}),
 
-    {ok,OouSize,St#state{codec = Codec1}}.
+    {ok,St#state{codec = Codec1}}.
 
 
 up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
