@@ -340,9 +340,10 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
     %%ok%% io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
+    io:format("mtp_down_conn      down_send ~p  ~n",  [byte_size(Encoded)]),
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
-        io:format("mtp_down_conn      down_send ~p  ~n",  [byte_size(Encoded)]),
+
         %%io:format("mtp_down_conn      down_send ---~p~n  ~p  ~n",  [byte_size(Encoded),Encoded]),
 
         fun() ->
