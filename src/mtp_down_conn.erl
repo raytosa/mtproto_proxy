@@ -133,8 +133,8 @@ init([Pool, DcId]) ->
 
 handle_call({send, Data}, {Upstream, _}, State) ->
    %% io_lib:format("mtp_down_conn      handle_call 2 ~n"),
-   SSize = unbound,
-    {Res, SSize,State1} = handle_send(Data, Upstream, State),
+ %%  SSize = unbound,
+    {Res, State1} = handle_send(Data, Upstream, State),
     %%  {Res, SSize,State1} = handle_send(Data, Upstream, State),
    %% io_lib:format("mtp_down_conn      handle_call 1 ~~p ~n",[SSize]),
     {reply, Res, State1};
@@ -246,8 +246,8 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
             down_send(Packet, St);
         _ ->
             ?log(warning, "Upstream=~p not found", [Upstream]),
-            OouSize = 0,
-            {{error, unknown_upstream}, OouSize,St}
+           %% OouSize = 0,
+            {{error, unknown_upstream}, St}
     end.
 
 
@@ -362,7 +362,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
                   iolist_size(Encoded), #{labels => [DcId]})
       end, #{labels => [DcId]}),
 
-    {ok,OouSize,St#state{codec = Codec1}}.
+    {ok,St#state{codec = Codec1}}.
 
 
 up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
