@@ -238,7 +238,9 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
-            down_send(Packet, St);
+            SSize = unbound,
+            down_send(Packet,SSize, St),
+            io:format("mtp_down_conn      handle_send  ~p ~n",[SSize]) ;
         _ ->
             ?log(warning, "Upstream=~p not found", [Upstream]),
             {{error, unknown_upstream}, St}
@@ -340,7 +342,8 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
     %%ok%% io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
-    io:format("mtp_down_conn      down_send ~p  ~n",  [byte_size(Encoded)]),
+   %% io:format("mtp_down_conn      down_send ~p  ~n",  [byte_size(Encoded)]),
+    OouSize = iolist_size(Encoded),
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
 
@@ -348,12 +351,12 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
 
         fun() ->
               ok = gen_tcp:send(Sock, Encoded),
-         %%%%%%io:format("mtp_down_conn      down_send ~p  ~n",  [Encoded]),%%io:format("mtp_down_conn      down_send ---~p~n  ~p  ~n",  [byte_size(Encoded),Encoded]),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
-                iolist_size(Encoded), #{labels => [DcId]})
+                  OouSize, #{labels => [DcId]})
       end, #{labels => [DcId]}),
-    {ok, St#state{codec = Codec1}}.
+
+    {ok,OouSize,St#state{codec = Codec1}}.
 
 
 up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
