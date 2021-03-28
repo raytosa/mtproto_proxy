@@ -112,7 +112,7 @@ init(DcId) ->
     {ok, State2}.
 
 handle_call({get, Upstream, Opts}, _From, State) ->
-    io_lib:format("mtp_dc_pool      handle_call`1 ~n"),
+    %%io_lib:format("mtp_dc_pool      handle_call`1 ~n"),
     case handle_get(Upstream, Opts, State) of
         {empty, State1} ->
             {reply, {error, empty}, State1};
@@ -120,13 +120,13 @@ handle_call({get, Upstream, Opts}, _From, State) ->
             {reply, Downstream, State1}
     end;
 handle_call(add_connection, _From, State) ->
-    io_lib:format("mtp_dc_pool      handle_call`2 ~n"),
+    %%io_lib:format("mtp_dc_pool      handle_call`2 ~n"),
     State1 = connect(State),
     {reply, ok, State1};
 handle_call(status, _From, #state{downstreams = Ds,
                                   upstreams = Us,
                                   dc_id = DcId} = State) ->
-    io_lib:format("mtp_dc_pool      handle_call`3 ~n"),
+    %%io_lib:format("mtp_dc_pool      handle_call`3 ~n"),
     {NDowns, NUps, Min, Max} =
         ds_fold(
           fun(_Pid, N, {NDowns, NUps, Min, Max}) ->
@@ -139,10 +139,10 @@ handle_call(status, _From, #state{downstreams = Ds,
               dc_id => DcId}, State}.
 
 handle_cast({return, Upstream}, State) ->
-    io_lib:format("mtp_dc_pool      handle_cast`1 ~n"),
+    %%io_lib:format("mtp_dc_pool      handle_cast`1 ~n"),
     {noreply, handle_return(Upstream, State)};
 handle_cast({connected, Pid}, State) ->
-    io_lib:format("mtp_dc_pool      handle_cast`2 ~n"),
+    %%io_lib:format("mtp_dc_pool      handle_cast`2 ~n"),
     {noreply, handle_connected(Pid, State)}.
 
 handle_info({'DOWN', MonitorRef, process, Pid, Reason}, State) ->
@@ -203,7 +203,7 @@ handle_down(MonRef, Pid, Reason, #state{downstreams = Ds,
                                         downstream_monitors = DsM,
                                         upstreams = Us,
                                         pending_downstreams = Pending} = St) ->
-    %%io_lib:format("mtp_dc_pool      handle_down`1 ~n"),
+    io_lib:format("mtp_dc_pool      handle_down`1 ~n"),
     case maps:take(Pid, Us) of
         {{Downstream, MonRef}, Us1} ->
             ok = mtp_down_conn:upstream_closed(Downstream, Pid),
