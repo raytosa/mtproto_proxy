@@ -150,7 +150,7 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off}
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
                    addr = {Ip, _}} = S) when Filter =/= off ->
-	io:format("mtp_handler      handle_cast 2 ~n"),
+	%%%%%%%no%%%%%io:format("mtp_handler      handle_cast 2 ~n"),
     %% telegram server -> proxy      tg服务器到代理
     %% Server replied with server error; it might be another kind of replay attack;
     %% Don't send this packet to client so proxy won't be fingerprinted
@@ -164,7 +164,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
          on -> S
      end};
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filter} = S) when Filter =/= off ->
-	  io:format("mtp_handler      handle_cast 3~n"),
+    %%%%%%%no%%%%% io:format("mtp_handler      handle_cast 3~n"),
     %% telegram server -> proxy    tg服务器到代理
     %% Normal data packet
     %% srv_error_filter is 'on' or srv_error_filter is 'first' and it's 1st server packet
