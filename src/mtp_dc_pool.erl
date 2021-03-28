@@ -83,15 +83,15 @@ get(Pool, Upstream, #{addr := _} = Opts) ->
     gen_server:call(Pool, {get, Upstream, Opts}).
 
 return(Pool, Upstream) ->
-    io_lib:format("mtp_dc_pool      return`1 ~n"),
+    %%io_lib:format("mtp_dc_pool      return`1 ~n"),
     gen_server:cast(Pool, {return, Upstream}).
 
 add_connection(Pool) ->
-    io_lib:format("mtp_dc_pool      add_connection`1 ~n"),
+    %%io_lib:format("mtp_dc_pool      add_connection`1 ~n"),
     gen_server:call(Pool, add_connection, 10000).
 
 ack_connected(Pool, Downstream) ->
-    io_lib:format("mtp_dc_pool      ack_connected`1 ~n"),
+    %%io_lib:format("mtp_dc_pool      ack_connected`1 ~n"),
     gen_server:cast(Pool, {connected, Downstream}).
 
 -spec status(pid()) -> status().
