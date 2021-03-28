@@ -203,7 +203,7 @@ handle_down(MonRef, Pid, Reason, #state{downstreams = Ds,
                                         downstream_monitors = DsM,
                                         upstreams = Us,
                                         pending_downstreams = Pending} = St) ->
-    io_lib:format("mtp_dc_pool      handle_down`1 ~n"),
+    %%io_lib:format("mtp_dc_pool      handle_down`1 ~n"),
     case maps:take(Pid, Us) of
         {{Downstream, MonRef}, Us1} ->
             ok = mtp_down_conn:upstream_closed(Downstream, Pid),
