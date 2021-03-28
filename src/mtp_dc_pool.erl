@@ -83,15 +83,15 @@ get(Pool, Upstream, #{addr := _} = Opts) ->
     gen_server:call(Pool, {get, Upstream, Opts}).
 
 return(Pool, Upstream) ->
-    %%io_lib:format("mtp_dc_pool      return`1 ~n"),
+    io_lib:format("mtp_dc_pool      return`1 ~n"),
     gen_server:cast(Pool, {return, Upstream}).
 
 add_connection(Pool) ->
-    %%io_lib:format("mtp_dc_pool      add_connection`1 ~n"),
+    io_lib:format("mtp_dc_pool      add_connection`1 ~n"),
     gen_server:call(Pool, add_connection, 10000).
 
 ack_connected(Pool, Downstream) ->
-    %%io_lib:format("mtp_dc_pool      ack_connected`1 ~n"),
+    io_lib:format("mtp_dc_pool      ack_connected`1 ~n"),
     gen_server:cast(Pool, {connected, Downstream}).
 
 -spec status(pid()) -> status().
@@ -112,7 +112,7 @@ init(DcId) ->
     {ok, State2}.
 
 handle_call({get, Upstream, Opts}, _From, State) ->
-    %%io_lib:format("mtp_dc_pool      handle_call`1 ~n"),
+    io_lib:format("mtp_dc_pool      handle_call`1 ~n"),
     case handle_get(Upstream, Opts, State) of
         {empty, State1} ->
             {reply, {error, empty}, State1};
@@ -120,13 +120,13 @@ handle_call({get, Upstream, Opts}, _From, State) ->
             {reply, Downstream, State1}
     end;
 handle_call(add_connection, _From, State) ->
-    %%io_lib:format("mtp_dc_pool      handle_call`2 ~n"),
+    io_lib:format("mtp_dc_pool      handle_call`2 ~n"),
     State1 = connect(State),
     {reply, ok, State1};
 handle_call(status, _From, #state{downstreams = Ds,
                                   upstreams = Us,
                                   dc_id = DcId} = State) ->
-    %%io_lib:format("mtp_dc_pool      handle_call`3 ~n"),
+    io_lib:format("mtp_dc_pool      handle_call`3 ~n"),
     {NDowns, NUps, Min, Max} =
         ds_fold(
           fun(_Pid, N, {NDowns, NUps, Min, Max}) ->
@@ -139,14 +139,14 @@ handle_call(status, _From, #state{downstreams = Ds,
               dc_id => DcId}, State}.
 
 handle_cast({return, Upstream}, State) ->
-    %%io_lib:format("mtp_dc_pool      handle_cast`1 ~n"),
+    io_lib:format("mtp_dc_pool      handle_cast`1 ~n"),
     {noreply, handle_return(Upstream, State)};
 handle_cast({connected, Pid}, State) ->
-    %%io_lib:format("mtp_dc_pool      handle_cast`2 ~n"),
+    io_lib:format("mtp_dc_pool      handle_cast`2 ~n"),
     {noreply, handle_connected(Pid, State)}.
 
 handle_info({'DOWN', MonitorRef, process, Pid, Reason}, State) ->
-    %%io_lib:format("mtp_dc_pool      handle_info`1 ~n"),
+    io_lib:format("mtp_dc_pool      handle_info`1 ~n"),
     {noreply, handle_down(MonitorRef, Pid, Reason, State)}.
 terminate(_Reason, #state{downstreams = Ds}) ->
     %%io_lib:format("mtp_dc_pool      terminate`1 ~n"),
