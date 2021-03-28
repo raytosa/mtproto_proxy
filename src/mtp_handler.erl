@@ -141,12 +141,11 @@ handle_call(_Request, _From, State) ->
     {reply, Reply, State}.
 
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off} = S) ->
-   % io:format("mtp_handler      handle_cast 1 ~n"),
     %% telegram server -> proxy   tg服务器到代理
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
-    io:format("mtp_handler      handle_cast1  --- ~p  ~n~p ~n",[iolist_size(Data),Data]),
+    %%%%%ok%%%%%io:format("mtp_handler      handle_cast1  --- ~p  ~n~p ~n",[iolist_size(Data),Data]),
     maybe_check_health(bump_timer(S1));
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,

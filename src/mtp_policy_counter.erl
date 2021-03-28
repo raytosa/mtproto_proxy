@@ -79,11 +79,11 @@ handle_call(flush, _From, #state{tab = Tab} = State) ->
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->
-	%%io_lib:format("mtp_policy_counter      handle_cast ~n"),
+	io_lib:format("mtp_policy_counter      handle_cast ~n"),
     {noreply, State}.
 
 handle_info(_Info, State) ->
-	%%io_lib:format("mtp_policy_counter      handle_info ~n"),
+	io_lib:format("mtp_policy_counter      handle_info ~n"),
     {noreply, State}.
 
 terminate(_Reason, _State) ->
