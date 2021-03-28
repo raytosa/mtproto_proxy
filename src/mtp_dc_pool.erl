@@ -146,7 +146,7 @@ handle_cast({connected, Pid}, State) ->
     {noreply, handle_connected(Pid, State)}.
 
 handle_info({'DOWN', MonitorRef, process, Pid, Reason}, State) ->
-    io_lib:format("mtp_dc_pool      handle_info`1 ~n"),
+    %%io_lib:format("mtp_dc_pool      handle_info`1 ~n"),
     {noreply, handle_down(MonitorRef, Pid, Reason, State)}.
 terminate(_Reason, #state{downstreams = Ds}) ->
     %%io_lib:format("mtp_dc_pool      terminate`1 ~n"),
