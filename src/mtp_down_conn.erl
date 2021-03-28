@@ -162,7 +162,7 @@ handle_call({set_config, Name, Value}, _From, State) ->
     {reply, Response, State1}.
 
 handle_cast({ack, Upstream, Count, Size}, State) ->
-    io_lib:format("mtp_down_conn      handle_cast 1 ~n"),
+    io_lib:format("mdc1 ~n"),
     {noreply, handle_ack(Upstream, Count, Size, State)};
 handle_cast({upstream_new, Upstream, Opts}, State) ->
   %% io_lib:format("mtp_down_conn      handle_cast 2 ~n"),
