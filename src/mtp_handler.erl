@@ -515,14 +515,9 @@ up_send_raw(Data, #state{sock = Sock,
                       end
               end, #{labels => [Listener]}).
 
-down_send(Packet, #state{down = Down} = S) -> 
- %%up io:format("mtp_handler      down_send ~n"),
-    %%ok%%   io:format("mtp_handler      down_send ~n ~p ~n ",[Packet]),
+down_send(Packet, #state{down = Down} = S) ->
     %% ?log(debug, ">Down: ~p", [Packet]),
-    RtN=1,
-    RevData=binary:encode_unsigned(binary:decode_unsigned(Packet, little)),
-   %%%%% case mtp_down_conn:send(Down, Packet) of
-    case mtp_down_conn:send(Down, RevData) of
+    case mtp_down_conn:send(Down, Packet) of
         ok ->
             {ok, S};
         {error, unknown_upstream} ->

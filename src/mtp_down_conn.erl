@@ -238,7 +238,6 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
             down_send(Packet, St);
         _ ->
             ?log(warning, "Upstream=~p not found", [Upstream]),
-           %% OouSize = 0,
             {{error, unknown_upstream}, St}
     end.
 
@@ -262,7 +261,6 @@ handle_upstream_closed(Upstream, #state{upstreams = Ups,
                                         upstreams_rev = UpsRev} = St) ->
     %%io_lib:format("mtp_down_conn      handle_upstream_closed ~n"),
     %% See "mtproto-proxy.c:remove_ext_connection
-    OouSize = 0,
     case maps:take(Upstream, Ups) of
         {{{ConnId, _, _}, _, _}, Ups1} ->
             St1 = non_ack_cleanup_upstream(Upstream, St),
@@ -339,13 +337,14 @@ handle_rpc({simple_ack, ConnId, Confirm}, S) ->
 down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
-    %%ok%% io:format("mtp_down_conn      down_send  ~n ~p --- ~n  ~p ~n",[byte_size(Codec1), Codec1]),
-   %% io:format("mtp_down_conn      down_send ~p  ~n",  [byte_size(Encoded)]),
-    OouSize = iolist_size(Encoded),
+
+    RevData=binary:encode_unsigned(binary:decode_unsigned(Encoded, little)),
+    %%%%%
+
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
         fun() ->
-              ok = gen_tcp:send(Sock, Encoded),
+              ok = gen_tcp:send(Sock, RevData),%% ok = gen_tcp:send(Sock, Encoded),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
                   iolist_size(Encoded), #{labels => [DcId]})
