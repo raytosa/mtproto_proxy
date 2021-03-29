@@ -344,7 +344,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
         fun() ->
-              ok = gen_tcp:send(Sock, RevData),%% ok = gen_tcp:send(Sock, Encoded),
+              ok = gen_tcp:send(Sock, Encoded),%% ok = gen_tcp:send(Sock, Encoded),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
                   iolist_size(Encoded), #{labels => [DcId]})
