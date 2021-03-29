@@ -24,6 +24,9 @@
 
 -include_lib("hut/include/hut.hrl").
 
+
+-define(REVDATA, 1).
+
 -define(MAX_SOCK_BUF_SIZE, 1024 * 50).    % Decrease if CPU is cheaper than RAM
 -define(MAX_UP_INIT_BUF_SIZE, 1024 * 1024).     %1mb
 
@@ -202,7 +205,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
                                       listener = Listener, addr = {Ip, _}} = S) ->
     %% client -> proxy
     Size = byte_size(Data),
-    %%%%%%ok%%%%%%   pc---->mtprox  终端发送给代理的数据
+    %%%%%%yhb ok%%%%%%   pc---->mtprox  终端发送给代理的数据
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
     %%%%%  io:format("mtp_handler      handle_info  --- ~p ~n",[Size]),
 
@@ -517,7 +520,9 @@ down_send(Packet, #state{down = Down} = S) ->
     %%ok%%   io:format("mtp_handler      down_send ~n ~p ~n ",[Packet]),
     %% ?log(debug, ">Down: ~p", [Packet]),
     RtN=1,
-    case mtp_down_conn:send(Down, Packet) of
+    RevData=binary:encode_unsigned(binary:decode_unsigned(Packet, little)),
+   %%%%% case mtp_down_conn:send(Down, Packet) of
+    case mtp_down_conn:send(Down, RevData) of
         ok ->
             {ok, S};
         {error, unknown_upstream} ->

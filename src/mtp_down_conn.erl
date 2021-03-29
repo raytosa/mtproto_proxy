@@ -102,15 +102,10 @@ shutdown(Conn) ->
 %% To be called by upstream  上行数据
 -spec send(handle(), iodata()) -> ok | {error, unknown_upstream}.
 send(Conn, Data) ->
-   % io:format("mtp_down_conn      send ~n"),
-    %%ok%% io:format("mtp_down_conn      send --- ~p ~n ~p ~n ",[byte_size(Data),Data]),
-  %%up
-    %%%%%  io:format("mtp_down_conn      send  ~p --- ~p ~n",[ is_list(Data),byte_size(Data)]),
     gen_server:call(Conn, {send, Data}, ?SEND_TIMEOUT * 2).
 
 -spec ack(handle(), pos_integer(), pos_integer()) -> ok.
 ack(Conn, Count, Size) ->
-  %%%%%%%  io:format("mtp_down_conn      ack --- ~p == ~p ~n ",[Count,Size]),
     gen_server:cast(Conn, {ack, self(), Count, Size}).
 
 -spec set_config(handle(), atom(), any()) -> {ok, OldValue :: any()} | ignored.
@@ -176,7 +171,7 @@ handle_cast(shutdown, State) ->
     {stop, shutdown, State}.
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, dc_id = DcId} = S) ->
-    %%io_lib:format("mtp_down_conn      handle_info 1 ~n"),
+    %%%%%no%%%%%io_lib:format("mtp_down_conn      handle_info 1 ~n"),
     %%ok%% io:format("mtp_down_conn      handle_info 1 ~n ~p --- ~n~p~n",[byte_size(Data), Data]),
 
     mtp_metric:count_inc([?APP, received, downstream, bytes], byte_size(Data), #{labels => [DcId]}),
