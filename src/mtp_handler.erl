@@ -207,7 +207,8 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     Size = byte_size(Data),
     %%%%%%yhb ok%%%%%%   pc---->mtprox  终端发送给代理的数据
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
-    %%%%%  io:format("mtp_handler      handle_info  --- ~p ~n",[Size]),
+    %%%%%
+    io:format("mtp_handler      handle_info  --- ~p ~n",[Size]),
 
   %%  io:format("mtp_handler      handle_info  ~n~p- ~n  ~p   ~n",[Size,Data]),
 
