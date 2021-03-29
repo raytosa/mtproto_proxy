@@ -338,7 +338,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
 
-    RevData=mtp_obfuscated:reverse_byte(Encoded),
+    RevData=mtp_obfuscated:bin_rev(Encoded),
         %binary:encode_unsigned(binary:decode_unsigned(Encoded, little)),
     %%%%%Ng
 
