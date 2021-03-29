@@ -235,7 +235,7 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
-            down_send_rev(Packet, St);
+            down_send(Packet, St);
         _ ->
             ?log(warning, "Upstream=~p not found", [Upstream]),
             {{error, unknown_upstream}, St}
