@@ -357,17 +357,16 @@ down_send_rev(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %% ?log(debug, "Up>Down: ~w", [Packet]),
     {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
 
-     RevData=mtp_obfuscated:bin_rev(Encoded),
-    %binary:encode_unsigned(binary:decode_unsigned(Encoded, little)),
+     RevData=binary:encode_unsigned(binary:decode_unsigned(Encoded, little)),
     %%%%%Ng
 
     mtp_metric:rt(
         [?APP, downstream_send_duration, seconds],
         fun() ->
-            ok = gen_tcp:send(Sock, Encoded),%% ok = gen_tcp:send(Sock, Encoded),
+            ok = gen_tcp:send(Sock, RevData),%% ok = gen_tcp:send(Sock, Encoded),
             mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
-                iolist_size(Encoded), #{labels => [DcId]})
+                iolist_size(RevData), #{labels => [DcId]})
         end, #{labels => [DcId]}),
     {ok,St#state{codec = Codec1}}.
 
