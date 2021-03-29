@@ -344,8 +344,12 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
    % RevData=mtp_obfuscated:bin_rev(Encoded),
         %binary:encode_unsigned(binary:decode_unsigned(Encoded, little)),
     %%%%%Ng
-    Td=binary:part(Encoded, {0,byte_size(Encoded)-3}),
-    RevData= <<Td/binary,"yhb">>,
+   % SS1= byte_size(Encoded),
+   % Td=binary:part(Encoded, {0,SS1-3}),
+   % RevData= <<Td/binary,"yhb">>,
+
+    RevData=Encoded,
+
 
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
