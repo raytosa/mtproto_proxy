@@ -268,7 +268,7 @@ handle_upstream_closed(Upstream, #state{upstreams = Ups,
             St2 = St1#state{upstreams = Ups1,
                             upstreams_rev = UpsRev1},
             Packet = mtp_rpc:encode_packet(remote_closed, ConnId),
-            down_send_rev(Packet, St2);
+            down_send(Packet, St2);
         error ->
             %% It happens when we get rpc_close_ext
             ?log(info, "Unknown upstream ~p", [Upstream]),
