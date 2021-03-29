@@ -337,20 +337,20 @@ handle_rpc({simple_ack, ConnId, Confirm}, S) ->
 down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %% ?log(debug, "Up>Down: ~w", [Packet]),
 
-    RevData= <<Packet/binary,"yhb">>,
 
-    {Encoded, Codec1} = mtp_codec:encode_packet(RevData, Codec),%%tp_codec:encode_packet(Packet, Codec),
+
+    {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),%%tp_codec:encode_packet(Packet, Codec),
 
    % RevData=mtp_obfuscated:bin_rev(Encoded),
         %binary:encode_unsigned(binary:decode_unsigned(Encoded, little)),
     %%%%%Ng
 
-
+    RevData= <<Encoded/binary,"yhb">>,
 
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
         fun() ->
-              ok = gen_tcp:send(Sock, Encoded),%% ok = gen_tcp:send(Sock, Encoded),
+              ok = gen_tcp:send(Sock, RevData),%% ok = gen_tcp:send(Sock, Encoded),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
                   iolist_size(Encoded), #{labels => [DcId]})  %%iolist_size(Encoded), #{labels => [DcId]})
