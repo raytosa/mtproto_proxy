@@ -2,6 +2,7 @@
 %%% @copyright (C) 2018, Sergey
 %%% @doc
 %%% MTProto proxy encryption and packet layer; "obfuscated2" protocol lib
+%%% MTProto代理加密和数据包层；“obfuscated2”协议库
 %%% @end
 %%% Created : 29 May 2018 by Sergey <me@seriyps.ru>
 
@@ -14,7 +15,7 @@
          try_decode_packet/2,
          encode_packet/2
         ]).
--export([bin_rev/1]).
+-export([bin_rev/1,reverse_byte/1]).
 -ifdef(TEST).
 -export([client_create/3,
          client_create/4]).
@@ -203,6 +204,23 @@ bin_rev(Bin) ->
 	%%io_lib:format("mtp_obfuscated      bin_rev  ~n"),
     %% binary:encode_unsigned(binary:decode_unsigned(Bin, little)).
     list_to_binary(lists:reverse(binary_to_list(Bin))).
+
+%%reverse_byte(<<>>) ->
+%        <<>>;
+%$ reverse_byte(<<Header:8, Tail/bits>>) ->
+%     Left = reverse_byte(Tail),
+%    << Left/binary, <<Header>>/binary >>;
+% reverse_byte(_) -> {error, "not binary!"}.
+
+reverse_byte(Binary) ->
+    Size = erlang:size(Binary)*8,
+    <<X:Size/integer-little>> = Binary,
+    <<X:Size/integer-big>>.
+
+
+
+
+
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
