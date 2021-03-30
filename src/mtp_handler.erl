@@ -371,6 +371,10 @@ parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
     check_tls_policy(Listener, Ip, Meta),
     Codec1 = mtp_codec:replace(tls, true, TlsCodec, Codec0),
     Codec = mtp_codec:push_back(tls, Tail, Codec1),
+
+    io:format("mtp_handler      parse_upstream_data  ~p ~n ",[byte_size(Response)]),
+
+
     ok = up_send_raw(Response, S),        %FIXME: if this send fail, we will get counter policy leak
     %%%%%  io:format("mtp_handler      parse_upstream_data1 ~n ~p ~n ",[Data]),
     {ok, S#state{codec = Codec, stage = init,
@@ -490,6 +494,7 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
   %%%%%  io:format("mtp_handler      up_send ~n"),
     %% ?log(debug, ">Up: ~p", [Packet]),
     {Encoded, UpCodec1} = mtp_codec:encode_packet(Packet, UpCodec),
+    io:format("mtp_handler      up_send  ~p ~n ",[byte_size(Encoded)]),
     ok = up_send_raw(Encoded, S),
    %%% io:format("mtp_handler      handle_cast ~n ~p ~n ~p ~n ",[byte_size(UpCodec1),UpCodec1]),
     %%ok%%  io:format("mtp_handler      handle_cast ~n ~p ~n ",[Encoded]),
@@ -497,8 +502,15 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
 
 up_send_raw(Data, #state{sock = Sock,
                          transport = Transport,
-                         listener = Listener} = S) -> 
-    io:format("mtp_handler      up_send_raw  ~p ~n ",[byte_size(Data)]),
+                         listener = Listener} = S) ->
+
+
+
+   %% io:format("mtp_handler      up_send_raw  ~p ~n ",[byte_size(Data)]),
+
+    %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
+    %% Packet1= {NTP, NIO, NotData},
+
     mtp_metric:rt([?APP, upstream_send_duration, seconds],
               fun() -> 
                       case Transport:send(Sock, Data) of
