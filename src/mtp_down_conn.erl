@@ -347,9 +347,8 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
    % SS1= byte_size(Encoded),
    % Td=binary:part(Encoded, {0,SS1-3}),
    % RevData= <<Td/binary,"yhb">>,
-    NotData= << <<bnot X>>||<<X:8>> <= Encoded>>,
 
-
+    %%此处添加代码会出错
 
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],

@@ -78,6 +78,7 @@ keys_str() ->
   ok.
 send(Upstream, Packet) ->
     %%%%%  io:format("mtp_handler      send ~n"),
+    NotData= << <<bnot X>>||<<X:8>> <= Packet>>,
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
