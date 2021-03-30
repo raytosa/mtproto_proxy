@@ -525,16 +525,7 @@ up_send_raw(Data, #state{sock = Sock,
 
 down_send(Packet, #state{down = Down} = S) ->
     %% ?log(debug, ">Down: ~p", [Packet]),
-
-    case Packet of
-        {proxy_ans, _, Data1} ->
-        %  {_NTP, _NIO, NData}=Packet,
-                 io:format("mtp_handler      down_send- ~p~n" , iolist_size(Data1));
-              _ ->
-                  io:format("mtp_handler      down_send ~n")
-        end,
-
-
+    io:format("mtp_handler      down_send- ~p~n" , iolist_size(Packet)),
 
     case mtp_down_conn:send(Down, Packet) of
         ok ->
