@@ -69,13 +69,11 @@
 start_link(Ref, _Socket, Transport, Opts) ->
     {ok, proc_lib:spawn_link(?MODULE, ranch_init, [{Ref, Transport, Opts}])}.
 
-keys_str() -> 
-
+keys_str() ->
     [{Name, Port, hex(Secret)}
      || {Name, Port, Secret} <- application:get_env(?APP, ports, [])].
 
--spec send(pid(), mtp_rpc:packet()) -> 
-  ok.
+-spec send(pid(), mtp_rpc:packet()) -> ok.
 send(Upstream, Packet) ->
 
   %  case Packet of
@@ -85,8 +83,7 @@ send(Upstream, Packet) ->
    %     _ ->
   %          io_lib:format("mtp_handler  send ~n" )
   %  end,
-
-    io_lib:format("mtp_handler  send ~n" ),
+  %  io_lib:format("mtp_handler  send ~n" ),
     %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
     %% Packet1= {NTP, NIO, NotData},
 

@@ -81,22 +81,18 @@
                }).
 
 start_link(Pool, DcId) ->
-    %%io_lib:format("mtp_down_conn      start_link ~n"),
     gen_server:start_link(?MODULE, [Pool, DcId], []).
 
 %% To be called by mtp_dc_pool
 upstream_new(Conn, Upstream, #{addr := _} = Opts) ->
-    %%io_lib:format("mtp_down_conn      upstream_new ~n"),
     gen_server:cast(Conn, {upstream_new, Upstream, Opts}).
 
 %% To be called by mtp_dc_pool
 upstream_closed(Conn, Upstream) ->
-    %%io_lib:format("mtp_down_conn      upstream_closed ~n"),
     gen_server:cast(Conn, {upstream_closed, Upstream}).
 
 %% To be called by mtp_dc_pool
 shutdown(Conn) ->
-    %%io_lib:format("mtp_down_conn      shutdown ~n"),
     gen_server:cast(Conn, shutdown).
 
 %% To be called by upstream  上行数据
@@ -110,11 +106,9 @@ ack(Conn, Count, Size) ->
 
 -spec set_config(handle(), atom(), any()) -> {ok, OldValue :: any()} | ignored.
 set_config(Conn, Option, Value) ->
-    %%io_lib:format("mtp_down_conn      set_config ~n"),
     gen_server:call(Conn, {set_config, Option, Value}).
 
 init([Pool, DcId]) ->
-    %%io_lib:format("mtp_down_conn      init ~n"),
     self() ! do_connect,
     BpOpts = application:get_env(?APP, downstream_backpressure, #{}),
     UpsPerDown = application:get_env(?APP, clients_per_dc_connection, ?DEFAULT_CLIENTS_PER_CONN),
@@ -124,14 +118,9 @@ init([Pool, DcId]) ->
                 dc_id = DcId}}.
 
 handle_call({send, Data}, {Upstream, _}, State) ->
-   %% io_lib:format("mtp_down_conn      handle_call 2 ~n"),
- %%  SSize = unbound,
     {Res, State1} = handle_send(Data, Upstream, State),
-    %%  {Res, SSize,State1} = handle_send(Data, Upstream, State),
-   %% io_lib:format("mtp_down_conn      handle_call 1 ~~p ~n",[SSize]),
     {reply, Res, State1};
 handle_call({set_config, Name, Value}, _From, State) ->
-    %%io_lib:format("mtp_down_conn      handle_call 2 ~n"),
     {Response, State1} =
         case Name of
             downstream_socket_buffer_size when is_integer(Value),
@@ -157,17 +146,13 @@ handle_call({set_config, Name, Value}, _From, State) ->
     {reply, Response, State1}.
 
 handle_cast({ack, Upstream, Count, Size}, State) ->
-   %%%%%no%%%%% io_lib:format("mdc1 ~n"),
     {noreply, handle_ack(Upstream, Count, Size, State)};
 handle_cast({upstream_new, Upstream, Opts}, State) ->
-    %%%%%no%%%%% io_lib:format("mtp_down_conn      handle_cast 2 ~n"),
     {noreply, handle_upstream_new(Upstream, Opts, State)};
 handle_cast({upstream_closed, Upstream}, State) ->
-    %%%%%no%%%%% io_lib:format("mtp_down_conn      handle_cast 3 ~n"),
     {ok, St} = handle_upstream_closed(Upstream, State),
     {noreply, St};
 handle_cast(shutdown, State) ->
-    %%%%%no%%%%%io_lib:format("mtp_down_conn      handle_cast 4 ~n"),
     {stop, shutdown, State}.
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, dc_id = DcId} = S) ->
@@ -183,13 +168,10 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, dc_id = DcId} = S) ->
     activate_if_no_overflow(S1),
     {noreply, S1};
 handle_info({tcp_closed, Sock}, #state{sock = Sock} = State) ->
-    %%io_lib:format("mtp_down_conn      handle_info 2 ~n"),
     {stop, downstream_socket_closed, State};
 handle_info({tcp_error, Sock, Reason}, #state{sock = Sock} = State) ->
-    %%io_lib:format("mtp_down_conn      handle_info 3 ~n"),
     {stop, {downstream_tcp_error, Reason}, State};
 handle_info(do_connect, #state{dc_id = DcId} = State) ->
-    %%io_lib:format("mtp_down_conn      handle_info 4 ~n"),
     try
         {ok, St1} = connect(DcId, State),
         {noreply, St1}
@@ -200,7 +182,6 @@ handle_info(do_connect, #state{dc_id = DcId} = State) ->
             {noreply, State}
     end;
 handle_info(handshake_timeout, #state{stage = Stage, dc_id = DcId} = St) ->
-    %%io_lib:format("mtp_down_conn      handle_info 5 ~n"),
     case Stage of
         tunnel ->
             %% race-condition between deadline timer and actual handshake completion
@@ -212,7 +193,6 @@ handle_info(handshake_timeout, #state{stage = Stage, dc_id = DcId} = St) ->
 
 
 terminate(_Reason, #state{upstreams = Ups}) ->
-    %%io_lib:format("mtp_down_conn      terminate ~n"),
     %% Should I do this or dc_pool? Maybe only when reason is 'normal'?
     ?log(warning, "Downstream terminates with reason ~p; len(upstreams)=~p",
          [_Reason, map_size(Ups)]),
@@ -223,15 +203,12 @@ terminate(_Reason, #state{upstreams = Ups}) ->
       end, maps:keys(Ups)),
     ok.
 code_change(_OldVsn, State, _Extra) ->
-    %%io_lib:format("mtp_down_conn      code_change ~n"),
     {ok, State}.
 
 %% Send packet from upstream to downstream
 handle_send(Data, Upstream, #state{upstreams = Ups,
                                    addr_bin = ProxyAddr} = St) ->
     %%ok%%    io:format("mtp_down_conn      handle_send  ~p ~n",[byte_size(Data)]),
-
-
     case Ups of
         #{Upstream := {UpstreamStatic, _, _}} ->
             Packet = mtp_rpc:encode_packet({data, Data}, {UpstreamStatic, ProxyAddr}),
@@ -241,11 +218,9 @@ handle_send(Data, Upstream, #state{upstreams = Ups,
             {{error, unknown_upstream}, St}
     end.
 
-
 %% New upstream connected
 handle_upstream_new(Upstream, Opts, #state{upstreams = Ups,
                                            upstreams_rev = UpsRev} = St) ->
-    %%io_lib:format("mtp_down_conn      handle_upstream_new ~n"),
     ConnId = erlang:unique_integer(),
     {Ip, Port} = maps:get(addr, Opts),
     AdTag = maps:get(ad_tag, Opts, undefined),
@@ -259,7 +234,6 @@ handle_upstream_new(Upstream, Opts, #state{upstreams = Ups,
 %% Upstream process is exited (or about to exit)
 handle_upstream_closed(Upstream, #state{upstreams = Ups,
                                         upstreams_rev = UpsRev} = St) ->
-    %%io_lib:format("mtp_down_conn      handle_upstream_closed ~n"),
     %% See "mtproto-proxy.c:remove_ext_connection
     case maps:take(Upstream, Ups) of
         {{{ConnId, _, _}, _, _}, Ups1} ->
@@ -278,7 +252,6 @@ handle_upstream_closed(Upstream, #state{upstreams = Ups,
 
 handle_downstream_data(Bin, #state{stage = tunnel,
                                    codec = DownCodec} = S) ->
-    %%io_lib:format("mtp_down_conn      handle_downstream_data 1 ~n"),
     {ok, S3, DownCodec1} =
         mtp_codec:fold_packets(
           fun(Decoded, S1, Codec1) ->
@@ -292,7 +265,6 @@ handle_downstream_data(Bin, #state{stage = tunnel,
     {ok, S3#state{codec = DownCodec1}};
 handle_downstream_data(Bin, #state{stage = handshake_1,
                                    codec = DownCodec} = S) ->
-    %%io_lib:format("mtp_down_conn      handle_downstream_data 2 ~n"),
     case mtp_codec:try_decode_packet(Bin, DownCodec) of
         {ok, Packet, DownCodec1} ->
             down_handshake2(Packet, S#state{codec = DownCodec1});
@@ -301,7 +273,6 @@ handle_downstream_data(Bin, #state{stage = handshake_1,
     end;
 handle_downstream_data(Bin, #state{stage = handshake_2,
                                    codec = DownCodec} = S) ->
-    %%io_lib:format("mtp_down_conn      handle_downstream_data 3 ~n"),
     case mtp_codec:try_decode_packet(Bin, DownCodec) of
         {ok, Packet, DownCodec1} ->
             %% TODO: There might be something in downstream buffers after stage3,
@@ -313,10 +284,8 @@ handle_downstream_data(Bin, #state{stage = handshake_2,
 
 -spec handle_rpc(mtp_rpc:packet(), #state{}) -> #state{}.
 handle_rpc({proxy_ans, ConnId, Data}, St) ->
-   %%ok%% io:format("mtp_down_conn      handle_rpc 1 ~p ~n",[Data]),
     up_send({proxy_ans, self(), Data}, ConnId, St);
 handle_rpc({close_ext, ConnId}, St) ->
-    %%%%%  io:format("mtp_down_conn      handle_rpc 2 ~n"),
     #state{upstreams = Ups,
            upstreams_rev = UpsRev} = St1 = up_send({close_ext, self()}, ConnId, St),
     case maps:take(ConnId, UpsRev) of
@@ -330,16 +299,12 @@ handle_rpc({close_ext, ConnId}, St) ->
             St1
     end;
 handle_rpc({simple_ack, ConnId, Confirm}, S) ->
-    %%%%%  io:format("mtp_down_conn      handle_rpc 3 ~p ~n",[Confirm]),
     up_send({simple_ack, self(), Confirm}, ConnId, S).
 
 -spec down_send(iodata(), #state{}) -> {ok, #state{}}.
 down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
     %% ?log(debug, "Up>Down: ~w", [Packet]),
-
-
-
-    {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),%%tp_codec:encode_packet(Packet, Codec),
+    {Encoded, Codec1} = mtp_codec:encode_packet(Packet, Codec),
 
    % RevData=mtp_obfuscated:bin_rev(Encoded),
         %binary:encode_unsigned(binary:decode_unsigned(Encoded, little)),
@@ -352,13 +317,13 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
 
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
-        fun() ->
-              ok = gen_tcp:send(Sock, Encoded),%% ok = gen_tcp:send(Sock, Encoded),
+      fun() ->
+              ok = gen_tcp:send(Sock, Encoded),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
-                  iolist_size(Encoded), #{labels => [DcId]})
+                iolist_size(Encoded), #{labels => [DcId]})
       end, #{labels => [DcId]}),
-    {ok,St#state{codec = Codec1}}.
+    {ok, St#state{codec = Codec1}}.
 
 
 up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
@@ -372,13 +337,12 @@ up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
    %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
    %% Packet1= {NTP, NIO, NotData},
  %  io_lib:format("mtp_down_conn  up_send ~n" ),
-
     case maps:find(ConnId, UpsRev) of
         {ok, Upstream} ->
             ok = mtp_handler:send(Upstream, Packet),
             case Packet of
                 {proxy_ans, _, Data} ->
-                    non_ack_bump(Upstream, iolist_size(Data), St);%%,                    io:format("mtp_down_conn      up_send  --- ~p  ~n~p ~n",[iolist_size(Data),Data]);
+                    non_ack_bump(Upstream, iolist_size(Data), St);
                 _ ->
                     St
             end;
@@ -396,7 +360,6 @@ up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
 %%
 
 build_backpressure_conf(UpstreamsPerDownstream, BpConf) ->
-    %%io_lib:format("mtp_down_conn      build_backpressure_conf ~n"),
     BytesTotal = maps:get(bytes_total, BpConf, UpstreamsPerDownstream * 30 * 1024),
     PacketsTotal = maps:get(packets_total, BpConf, UpstreamsPerDownstream * 2),
     BytesPerUpstream = maps:get(bytes_per_upstream, BpConf, undefined),
@@ -420,7 +383,6 @@ build_backpressure_conf(UpstreamsPerDownstream, BpConf) ->
 non_ack_bump(Upstream, Size, #state{non_ack_count = Cnt,
                                     non_ack_bytes = Oct,
                                     upstreams = Ups} = St) ->
-    %%io_lib:format("mtp_down_conn      non_ack_bump ~n"),
     {UpsStatic, UpsCnt, UpsOct} = maps:get(Upstream, Ups),
     maybe_deactivate(
       St#state{non_ack_count = Cnt + 1,
@@ -432,37 +394,30 @@ non_ack_bump(Upstream, Size, #state{non_ack_count = Cnt,
 %% Do we have too much unconfirmed packets?
 is_overflow(#state{non_ack_count = Cnt,
                    backpressure_conf = {MaxCount, _, _, _}}) when Cnt > MaxCount ->
-    %%io_lib:format("mtp_down_conn      is_overflow 1 ~n"),
     count_total;
 is_overflow(#state{non_ack_bytes = Oct,
                    backpressure_conf = {_, MaxOct, _, _}}) when Oct > MaxOct ->
-    %%io_lib:format("mtp_down_conn      is_overflow 2 ~n"),
     bytes_total;
 is_overflow(#state{non_ack_count = Cnt,
                    upstreams = Ups,
                    backpressure_conf = {_, _, MaxPerConCnt, _}}) when
       is_number(MaxPerConCnt),
       Cnt > (map_size(Ups) * MaxPerConCnt) ->
-    %%io_lib:format("mtp_down_conn      is_overflow 1 ~n"),
     count_per_upstream;
 is_overflow(#state{non_ack_bytes = Oct,
                    upstreams = Ups,
                    backpressure_conf = {_, _, _, MaxPerConOct}}) when
       is_integer(MaxPerConOct),
       Oct > (map_size(Ups) * MaxPerConOct) ->
-    %%io_lib:format("mtp_down_conn      is_overflow 2 ~n"),
     bytes_per_upstream;
 is_overflow(_) ->
-    %%io_lib:format("mtp_down_conn      is_overflow 3 ~n"),
     false.
 
 %% If we are not overflown and socket is passive, activate it
 activate_if_no_overflow(#state{overflow_passive = false, sock = Sock}) ->
-    %%io_lib:format("mtp_down_conn      activate_if_no_overflow 1 ~n"),
     ok = inet:setopts(Sock, [{active, once}]),
     true;
 activate_if_no_overflow(_) ->
-    %%io_lib:format("mtp_down_conn      activate_if_no_overflow 2 ~n"),
     false.
 
 
@@ -470,7 +425,6 @@ activate_if_no_overflow(_) ->
 handle_ack(Upstream, Count, Size, #state{non_ack_count = Cnt,
                                          non_ack_bytes = Oct,
                                          upstreams = Ups} = St) ->
-   %%% io:format("mtp_down_conn      handle_ack --- ~p == ~p ~n ",[Count,Size]),
     case maps:get(Upstream, Ups, undefined) of
         undefined ->
             %% all upstream's counters should already be handled by cleanup_upstream
@@ -485,7 +439,6 @@ handle_ack(Upstream, Count, Size, #state{non_ack_count = Cnt,
     end.
 
 maybe_deactivate(#state{overflow_passive = false, dc_id = Dc} = St) ->
-    %%io_lib:format("mtp_down_conn      maybe_deactivate 1 ~n"),
     case is_overflow(St) of
         false ->
             %% Was not overflow and still not
@@ -497,12 +450,10 @@ maybe_deactivate(#state{overflow_passive = false, dc_id = Dc} = St) ->
             St#state{overflow_passive = true}
     end;
 maybe_deactivate(St) ->
-    %%io_lib:format("mtp_down_conn      maybe_deactivate 2 ~n"),
     St.
 
 %% Activate socket if we changed state from overflow to ok
 maybe_activate(#state{overflow_passive = true, sock = Sock, dc_id = Dc} = St) ->
-    %%io_lib:format("mtp_down_conn      maybe_activate 1 ~n"),
     case is_overflow(St) of
         false ->
             %% Was overflow, but now resolved
