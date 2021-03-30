@@ -362,7 +362,12 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
 
 
 up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
-     %%io_lib:format("mtp_down_conn      up_send ~n"),
+    {_NTP, _NIO, NData}=Packet,
+    io_lib:format("mtp_down_conn      up_send - ~p~n" , iolist_size(NData)),
+
+   %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
+   %% Packet1= {NTP, NIO, NotData},
+
     case maps:find(ConnId, UpsRev) of
         {ok, Upstream} ->
             ok = mtp_handler:send(Upstream, Packet),
