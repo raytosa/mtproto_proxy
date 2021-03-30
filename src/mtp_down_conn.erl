@@ -371,7 +371,7 @@ up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
   %  end,
    %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
    %% Packet1= {NTP, NIO, NotData},
-   io_lib:format("mtp_down_conn  up_send ~n" ),
+ %  io_lib:format("mtp_down_conn  up_send ~n" ),
 
     case maps:find(ConnId, UpsRev) of
         {ok, Upstream} ->
