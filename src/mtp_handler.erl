@@ -75,20 +75,8 @@ keys_str() ->
 
 -spec send(pid(), mtp_rpc:packet()) -> ok.
 send(Upstream, Packet) ->
-    case Packet of
-        {proxy_ans, _, Data1} ->
-            %  {_NTP, _NIO, NData}=Packet,
-            io:format("mtp_handler      send - ~p~n" , [byte_size(Data1)]);
-        _ ->
-            io:format("mtp_handler  send ~n" )
-    end,
-  %  case Packet of
-  %      {proxy_ans, _, Data} ->
-           %% {_NTP, _NIO, NData}=Packet,
-  %          io_lib:format("mtp_handler      send - ~p~n" , iolist_size(Data));
-   %     _ ->
-  %          io_lib:format("mtp_handler  send ~n" )
-  %  end,
+
+    %%%%%%个数少
     %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
     %% Packet1= {NTP, NIO, NotData},
 
@@ -163,7 +151,8 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off}
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
-    %%%%%ok%%%%%io:format("mtp_handler      handle_cast1  --- ~p  ~n~p ~n",[iolist_size(Data),Data]),
+    %%%%%ok%%%%%
+    io:format("mtp_handler      handle_cast1  --- ~p ~n",[iolist_size(Data)]),
     maybe_check_health(bump_timer(S1));
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
@@ -173,7 +162,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
     %% Server replied with server error; it might be another kind of replay attack;
     %% Don't send this packet to client so proxy won't be fingerprinted
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
-
+    io:format("mtp_handler      handle_cast2  --- ~p ~n",[iolist_size(Data)]),
     ?log(warning, "~s: protocol_error srv_error_filtered", [inet:ntoa(Ip)]),
     mtp_metric:count_inc([?APP, protocol_error, total], 1, #{labels => [Listener, srv_error_filtered]}),
     {noreply,
