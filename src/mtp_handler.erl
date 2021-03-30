@@ -77,8 +77,8 @@ keys_str() ->
 -spec send(pid(), mtp_rpc:packet()) -> 
   ok.
 send(Upstream, Packet) ->
-    %%%%%  io:format("mtp_handler      send ~n"),
-    NotData= << <<bnot X>>||<<X:8>> <= Packet>>,
+    io:format("mtp_handler      send ~n"),
+    %%此处添加代码会出错 NotData= << <<bnot X>>||<<X:8>> <= Packet>>,
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
