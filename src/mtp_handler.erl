@@ -525,6 +525,7 @@ up_send_raw(Data, #state{sock = Sock,
 
 down_send(Packet, #state{down = Down} = S) ->
     %% ?log(debug, ">Down: ~p", [Packet]),
+    io:format("mtp_handler      down_send ~n"),
     case mtp_down_conn:send(Down, Packet) of
         ok ->
             {ok, S};
