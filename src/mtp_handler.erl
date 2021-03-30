@@ -209,8 +209,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     %%-----yhb----------------------------------------------------------------------
     %%%%%%yhb ok%%%%%%   pc---->mtprox  终端发送给代理的数据
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
-    %%%%%
-    io:format("mtp_handler_handle_info  Not recive Data--- ~p ~n",[Size]),
+    %%%%%    io:format("mtp_handler_handle_info  Not receive Data--- ~p ~n",[Size]),
     %% 全部数据取反
     NotData= << <<bnot X>>||<<X:8>> <= Data>>,
     %  RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
