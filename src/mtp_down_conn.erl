@@ -336,7 +336,8 @@ up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
   %  end,
    %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
    %% Packet1= {NTP, NIO, NotData},
-  %%% 加代码会出错  io_lib:format("mtp_down_conn  up_send ~n" ),
+  io:format("mtp_down_conn  up_send ~n" ),
+
     case maps:find(ConnId, UpsRev) of
         {ok, Upstream} ->
             ok = mtp_handler:send(Upstream, Packet),
