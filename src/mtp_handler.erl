@@ -502,7 +502,7 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
 up_send_raw(Data, #state{sock = Sock,
                          transport = Transport,
                          listener = Listener} = S) -> 
-  %%io_lib:format("mtp_handler      up_send_raw ~n"),
+    io:format("mtp_handler      up_send_raw  ~p ~n ",[byte_size(Data)]),
     mtp_metric:rt([?APP, upstream_send_duration, seconds],
               fun() -> 
                       case Transport:send(Sock, Data) of
