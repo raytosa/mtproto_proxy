@@ -86,7 +86,7 @@ send(Upstream, Packet) ->
     %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
     %% Packet1= {NTP, NIO, NotData},
 
-    io_lib:format("mtp_handler  send ~n"),
+  %  io_lib:format("mtp_handler  send ~n"),
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
