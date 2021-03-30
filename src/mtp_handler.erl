@@ -151,8 +151,7 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = off}
     %% srv_error_filter is 'off'
     {ok, S1} = up_send(Data, S),
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
-    %%%%%ok%%%%%
-    io:format("mtp_handler      handle_cast1  --- ~p ~n",[iolist_size(Data)]),
+    %%%%%无反应%%%%%    io:format("mtp_handler      handle_cast1  --- ~p ~n",[iolist_size(Data)]),
     maybe_check_health(bump_timer(S1));
 handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
             #state{down = Down, srv_error_filter = Filter, listener = Listener,
@@ -162,7 +161,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
     %% Server replied with server error; it might be another kind of replay attack;
     %% Don't send this packet to client so proxy won't be fingerprinted
     ok = mtp_down_conn:ack(Down, 1, iolist_size(Data)),
-    io:format("mtp_handler      handle_cast2  --- ~p ~n",[iolist_size(Data)]),
+    %%%%%无反应%%%%% io:format("mtp_handler      handle_cast2  --- ~p ~n",[iolist_size(Data)]),
     ?log(warning, "~s: protocol_error srv_error_filtered", [inet:ntoa(Ip)]),
     mtp_metric:count_inc([?APP, protocol_error, total], 1, #{labels => [Listener, srv_error_filtered]}),
     {noreply,
@@ -171,7 +170,8 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
          on -> S
      end};
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filter} = S) when Filter =/= off ->
-    %%%%%%%no%%%%% io:format("mtp_handler      handle_cast 3~n"),
+    %%%%%%%no%%%%%
+    io:format("mtp_handler      handle_cast 3~n"),
     %% telegram server -> proxy    tg服务器到代理
     %% Normal data packet
     %% srv_error_filter is 'on' or srv_error_filter is 'first' and it's 1st server packet
@@ -183,16 +183,19 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filt
          end,
     maybe_check_health(bump_timer(S2));
 handle_cast({close_ext, Down}, #state{down = Down, sock = USock, transport = UTrans} = S) -> 
-  %%%%%  io:format("mtp_handler      handle_cast 4 ~n"),
+  %%%%%
+    io:format("mtp_handler      handle_cast 4 ~n"),
     ?log(debug, "asked to close connection by downstream"),
     ok = UTrans:close(USock),
     {stop, normal, S#state{down = undefined}};
 handle_cast({simple_ack, Down, Confirm}, #state{down = Down} = S) -> 
-  %%%%%  io:format("mtp_handler      handle_cast 5 ~n"),
+  %%%%%
+    io:format("mtp_handler      handle_cast 5 ~n"),
     ?log(info, "Simple ack: ~p, ~p", [Down, Confirm]),
     {noreply, S};
 handle_cast(Other, State) -> 
-  %%%%%  io:format("mtp_handler      handle_cast 6 ~n"),
+  %%%%%
+    io:format("mtp_handler      handle_cast 6 ~n"),
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, State}.
 
