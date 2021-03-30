@@ -498,7 +498,7 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
     %%%%%%yhb ok%%%%%%   mt proxy---->pc  代理发送给终端的数据
     %% 全部数据取反
     NotEncoded= << <<bnot X>>||<<X:8>> <= Encoded>>,
-    %%%io:format("mtp_handler      up_send  ~p ~n ",[byte_size(NotEncoded)]),
+    io:format("mtp_handler      up_send  ~p ~n ",[byte_size(NotEncoded)]),
     %  RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     % Size1 = byte_size(RevData),
     %%-----yhb----------------------------------------------------------------------
