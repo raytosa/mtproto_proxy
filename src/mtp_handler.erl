@@ -490,14 +490,14 @@ check_policy(Listener, Ip, Domain) ->
             error({protocol_error, policy_error, {Rule, Listener, Ip, Domain}})
     end.
 
-up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) -> 
-  %%%%%  io:format("mtp_handler      up_send ~n"),
+up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
     %% ?log(debug, ">Up: ~p", [Packet]),
     {Encoded, UpCodec1} = mtp_codec:encode_packet(Packet, UpCodec),
-    io:format("mtp_handler      up_send  ~p ~n ",[byte_size(Encoded)]),
-    ok = up_send_raw(Encoded, S),
-   %%% io:format("mtp_handler      handle_cast ~n ~p ~n ~p ~n ",[byte_size(UpCodec1),UpCodec1]),
-    %%ok%%  io:format("mtp_handler      handle_cast ~n ~p ~n ",[Encoded]),
+
+    NotEncoded= << <<bnot X>>||<<X:8>> <= Encoded>>,
+    io:format("mtp_handler      up_send  ~p ~n ",[byte_size(NotEncoded)]),
+
+    ok = up_send_raw(NotEncoded, S),%%% ok = up_send_raw(Encoded, S),
     {ok, S#state{codec = UpCodec1}}.
 
 up_send_raw(Data, #state{sock = Sock,
@@ -508,8 +508,7 @@ up_send_raw(Data, #state{sock = Sock,
 
    %% io:format("mtp_handler      up_send_raw  ~p ~n ",[byte_size(Data)]),
 
-    %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
-    %% Packet1= {NTP, NIO, NotData},
+
 
     mtp_metric:rt([?APP, upstream_send_duration, seconds],
               fun() -> 
