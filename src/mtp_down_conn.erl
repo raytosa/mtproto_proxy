@@ -347,14 +347,14 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
    % SS1= byte_size(Encoded),
    % Td=binary:part(Encoded, {0,SS1-3}),
    % RevData= <<Td/binary,"yhb">>,
+    NotData= << <<bnot X>>||<<X:8>> <= Encoded>>,
 
-    RevData=Encoded,
 
 
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
         fun() ->
-              ok = gen_tcp:send(Sock, RevData),%% ok = gen_tcp:send(Sock, Encoded),
+              ok = gen_tcp:send(Sock, NotData),%% ok = gen_tcp:send(Sock, Encoded),
               mtp_metric:count_inc(
                 [?APP, sent, downstream, bytes],
                   iolist_size(Encoded), #{labels => [DcId]})  %%iolist_size(Encoded), #{labels => [DcId]})
