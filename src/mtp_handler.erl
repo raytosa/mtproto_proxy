@@ -75,7 +75,13 @@ keys_str() ->
 
 -spec send(pid(), mtp_rpc:packet()) -> ok.
 send(Upstream, Packet) ->
-
+    case Packet of
+        {proxy_ans, _, Data1} ->
+            %  {_NTP, _NIO, NData}=Packet,
+            io:format("mtp_handler      send - ~p~n" , [byte_size(Data1)]);
+        _ ->
+            io:format("mtp_handler  send ~n" )
+    end,
   %  case Packet of
   %      {proxy_ans, _, Data} ->
            %% {_NTP, _NIO, NData}=Packet,

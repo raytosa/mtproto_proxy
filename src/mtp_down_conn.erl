@@ -327,13 +327,7 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
 
 
 up_send(Packet, ConnId, #state{upstreams_rev = UpsRev} = St) ->
-    case Packet of
-       {proxy_ans, _, Data1} ->
-          %  {_NTP, _NIO, NData}=Packet,
-           io:format("mtp_down_conn      up_send - ~p~n" , [byte_size(Data1)]);
-        _ ->
-           io:format("mtp_down_conn  up_send ~n" )
-    end,
+    %%%%%%个数少
    %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
    %% Packet1= {NTP, NIO, NotData},
 
