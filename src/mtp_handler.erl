@@ -78,15 +78,15 @@ keys_str() ->
   ok.
 send(Upstream, Packet) ->
 
-    case Packet of
-        {proxy_ans, _, Data} ->
+  %  case Packet of
+  %      {proxy_ans, _, Data} ->
            %% {_NTP, _NIO, NData}=Packet,
-            io_lib:format("mtp_handler      send - ~p~n" , iolist_size(Data));
-        _ ->
-            io_lib:format("mtp_handler  send ~n" )
-    end,
+  %          io_lib:format("mtp_handler      send - ~p~n" , iolist_size(Data));
+   %     _ ->
+  %          io_lib:format("mtp_handler  send ~n" )
+  %  end,
 
-
+    io_lib:format("mtp_handler  send ~n" )
     %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
     %% Packet1= {NTP, NIO, NotData},
 
