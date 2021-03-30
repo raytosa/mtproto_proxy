@@ -80,14 +80,14 @@ send(Upstream, Packet) ->
     %% NotData= << <<bnot X>>||<<X:8>> <= NData>>,
     %% Packet1= {NTP, NIO, NotData},
 
-  %  io_lib:format("mtp_handler  send ~n"),
+  %  io:format("mtp_handler  send ~n"),
     gen_server:cast(Upstream, Packet).
 
 %% Callbacks
 
 %% Custom gen_server init
 ranch_init({Ref, Transport, Opts}) -> 
-  %%io_lib:format("mtp_handler      ranch_init ~n"),
+  %%io:format("mtp_handler      ranch_init ~n"),
     {ok, Socket} = ranch:handshake(Ref),
     case init({Socket, Transport, Opts}) of
         {ok, State} ->
@@ -110,7 +110,7 @@ ranch_init({Ref, Transport, Opts}) ->
     end.
 
 init({Socket, Transport, [Name, Secret, Tag]}) -> 
-  %%io_lib:format("mtp_handler      init ~n"),
+  %%io:format("mtp_handler      init ~n"),
     mtp_metric:count_inc([?APP, in_connection, total], 1, #{labels => [Name]}),
     case Transport:peername(Socket) of
         {ok, {Ip, Port}} ->
@@ -170,8 +170,7 @@ handle_cast({proxy_ans, Down, ?SRV_ERROR = Data},
          on -> S
      end};
 handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filter} = S) when Filter =/= off ->
-    %%%%%%%no%%%%%
-    io:format("mtp_handler      handle_cast 3~n"),
+    %%%%%%%    io:format("mtp_handler      handle_cast 3~n"),
     %% telegram server -> proxy    tg服务器到代理
     %% Normal data packet
     %% srv_error_filter is 'on' or srv_error_filter is 'first' and it's 1st server packet
@@ -183,19 +182,16 @@ handle_cast({proxy_ans, Down, Data}, #state{down = Down, srv_error_filter = Filt
          end,
     maybe_check_health(bump_timer(S2));
 handle_cast({close_ext, Down}, #state{down = Down, sock = USock, transport = UTrans} = S) -> 
-  %%%%%
-    io:format("mtp_handler      handle_cast 4 ~n"),
+  %%%%%    io:format("mtp_handler      handle_cast 4 ~n"),
     ?log(debug, "asked to close connection by downstream"),
     ok = UTrans:close(USock),
     {stop, normal, S#state{down = undefined}};
 handle_cast({simple_ack, Down, Confirm}, #state{down = Down} = S) -> 
-  %%%%%
-    io:format("mtp_handler      handle_cast 5 ~n"),
+  %%%%%    io:format("mtp_handler      handle_cast 5 ~n"),
     ?log(info, "Simple ack: ~p, ~p", [Down, Confirm]),
     {noreply, S};
 handle_cast(Other, State) -> 
-  %%%%%
-    io:format("mtp_handler      handle_cast 6 ~n"),
+  %%%%%    io:format("mtp_handler      handle_cast 6 ~n"),
     ?log(warning, "Unexpected msg ~p", [Other]),
     {noreply, State}.
 
@@ -289,19 +285,19 @@ terminate(_Reason, #state{started_at = Started, listener = Listener,
     ok.
 
 code_change(_OldVsn, State, _Extra) -> 
-  %%io_lib:format("mtp_handler      code_change ~n"),
+  %%io:format("mtp_handler      code_change ~n"),
     {ok, State}.
 
 maybe_close_down(#state{down = undefined} = S) -> 
-  %%io_lib:format("mtp_handler      maybe_close_down1 ~n"),
+  %%io:format("mtp_handler      maybe_close_down1 ~n"),
   S;
 maybe_close_down(#state{dc_id = {_DcId, Pool}} = S) -> 
-  %%io_lib:format("mtp_handler      maybe_close_down2 ~n"),
+  %%io:format("mtp_handler      maybe_close_down2 ~n"),
     mtp_dc_pool:return(Pool, self()),
     S#state{down = undefined}.
 
 bump_timer(#state{timer = Timer, timer_state = TState} = S) -> 
-  %%io_lib:format("mtp_handler      bump_timer ~n"),
+  %%io:format("mtp_handler      bump_timer ~n"),
     Timer1 = gen_timeout:bump(Timer),
     case TState of
         stop ->
@@ -311,10 +307,10 @@ bump_timer(#state{timer = Timer, timer_state = TState} = S) ->
     end.
 
 switch_timer(#state{timer_state = TState} = S, TState) -> 
-  %%io_lib:format("mtp_handler      switch_timer1 ~n"),
+  %%io:format("mtp_handler      switch_timer1 ~n"),
     S;
 switch_timer(#state{timer_state = FromState, timer = Timer, listener = Listener} = S, ToState) -> 
-  %%io_lib:format("mtp_handler      switch_timer 2 ~n"),
+  %%io:format("mtp_handler      switch_timer 2 ~n"),
     mtp_metric:count_inc([?APP, timer_switch, total], 1,
                      #{labels => [Listener, FromState, ToState]}),
     {NewTimeKey, NewTimeDefault} = state_timeout(ToState),
@@ -324,13 +320,13 @@ switch_timer(#state{timer_state = FromState, timer = Timer, listener = Listener}
             timer = Timer1}.
 
 state_timeout(init) -> 
-  %%io_lib:format("mtp_handler      state_timeout 1 ~n"),
+  %%io:format("mtp_handler      state_timeout 1 ~n"),
     {init_timeout_sec, 60};
 state_timeout(hibernate) -> 
-  %%io_lib:format("mtp_handler      state_timeout 2 ~n"),
+  %%io:format("mtp_handler      state_timeout 2 ~n"),
     {hibernate_timeout_sec, 60};
 state_timeout(stop) -> 
-  %%io_lib:format("mtp_handler      state_timeout 3 ~n"),
+  %%io:format("mtp_handler      state_timeout 3 ~n"),
     {ready_timeout_sec, 1200}.
 
 
@@ -442,28 +438,28 @@ parse_upstream_data(Bin, #state{stage = Stage, codec = Codec0} = S) when Stage =
 
 
 allowed_protocols() -> 
-  %%io_lib:format("mtp_handler      allowed_protocols ~n"),
+  %%io:format("mtp_handler      allowed_protocols ~n"),
     {ok, AllowedProtocols} = application:get_env(?APP, allowed_protocols),
     AllowedProtocols.
 
 is_tls_only([mtp_fake_tls]) -> 
-  %%io_lib:format("mtp_handler      is_tls_only1 ~n"),
+  %%io:format("mtp_handler      is_tls_only1 ~n"),
   true;
 is_tls_only(_) -> 
-  %%io_lib:format("mtp_handler      is_tls_only2 ~n"),
+  %%io:format("mtp_handler      is_tls_only2 ~n"),
   false.
 
 assert_protocol(Protocol) -> 
-  %%io_lib:format("mtp_handler      assert_protocol1 ~n"),
+  %%io:format("mtp_handler      assert_protocol1 ~n"),
     assert_protocol(Protocol, allowed_protocols()).
 
 assert_protocol(Protocol, AllowedProtocols) -> 
-  %%io_lib:format("mtp_handler      assert_protocol2 ~n"),
+  %%io:format("mtp_handler      assert_protocol2 ~n"),
     lists:member(Protocol, AllowedProtocols)
         orelse error({protocol_error, disabled_protocol, Protocol}).
 
 maybe_check_replay(Packet) -> 
-  %%io_lib:format("mtp_handler      maybe_check_replay ~n"),
+  %%io:format("mtp_handler      maybe_check_replay ~n"),
     %% Check for session replay attack: attempt to connect with the same 1st 64byte packet
     case application:get_env(?APP, replay_check_session_storage, off) of
         on ->
@@ -474,15 +470,15 @@ maybe_check_replay(Packet) ->
     end.
 
 check_tls_policy(Listener, Ip, #{sni_domain := TlsDomain}) -> 
-  %%io_lib:format("mtp_handler      check_tls_policy1 ~n"),
+  %%io:format("mtp_handler      check_tls_policy1 ~n"),
     %% TODO validate timestamp!
     check_policy(Listener, Ip, TlsDomain);
 check_tls_policy(_, Ip, Meta) -> 
-  %%io_lib:format("mtp_handler      check_tls_policy2 ~n"),
+  %%io:format("mtp_handler      check_tls_policy2 ~n"),
     error({protocol_error, tls_no_sni, {Ip, Meta}}).
 
 check_policy(Listener, Ip, Domain) -> 
-  %%io_lib:format("mtp_handler      check_policy ~n"),
+  %%io:format("mtp_handler      check_policy ~n"),
     Rules = application:get_env(?APP, policy, []),
     case mtp_policy:check(Rules, Listener, Ip, Domain) of
         [] -> ok;
@@ -551,7 +547,7 @@ handle_unknown_upstream(#state{down = Down, sock = USock, transport = UTrans} = 
 
 %% @doc Terminate if message queue is too big
 maybe_check_health(#state{last_queue_check = LastCheck} = S) -> 
-  %%io_lib:format("mtp_handler      maybe_check_health ~n"),
+  %%io:format("mtp_handler      maybe_check_health ~n"),
     NowMs = erlang:system_time(millisecond),
     Delta = NowMs - LastCheck,
     case Delta < ?HEALTH_CHECK_INTERVAL of
@@ -570,7 +566,7 @@ maybe_check_health(#state{last_queue_check = LastCheck} = S) ->
 %% 2. If proc total memory > gc - do GC and go to 3
 %% 3. If proc total memory > total_mem - stop
 check_health() -> 
-  %%io_lib:format("mtp_handler      check_health ~n"),
+  %%io:format("mtp_handler      check_health ~n"),
     %% see .app.src
     Defaults = [{qlen, 300},
                 {gc, 409600},
@@ -579,13 +575,13 @@ check_health() ->
     do_check_health(Checks, calc_health()).
 
 do_check_health([{qlen, Limit} | _], #{message_queue_len := QLen} = Health) when QLen > Limit ->
-	 %%io_lib:format("mtp_handler      do_check_health1 ~n"),
+	 %%io:format("mtp_handler      do_check_health1 ~n"),
     mtp_metric:count_inc([?APP, healthcheck, total], 1,
                          #{labels => [message_queue_len]}),
     ?log(warning, "Upstream too large queue_len=~w, health=~p", [QLen, Health]),
     overflow;
 do_check_health([{gc, Limit} | Other], #{total_mem := TotalMem}) when TotalMem > Limit ->
-	 %%io_lib:format("mtp_handler      do_check_health2 ~n"),
+	 %%io:format("mtp_handler      do_check_health2 ~n"),
     %% Maybe it doesn't makes sense to do GC if queue len is more than, eg, 50?
     %% In this case allmost all memory will be in msg queue
     mtp_metric:count_inc([?APP, healthcheck, total], 1,
@@ -599,14 +595,14 @@ do_check_health([{total_mem, Limit} | _Other], #{total_mem := TotalMem} = Health
     ?log(warning, "Process too large total_mem=~p, health=~p", [TotalMem / 1024, Health]),
     overflow;
 do_check_health([_Ok | Other], Health) -> 
-  %%io_lib:format("mtp_handler      do_check_health ~n"),
+  %%io:format("mtp_handler      do_check_health ~n"),
     do_check_health(Other, Health);
 do_check_health([], _) -> 
-  %%io_lib:format("mtp_handler      do_check_health ~n"),
+  %%io:format("mtp_handler      do_check_health ~n"),
     ok.
 
 calc_health() -> 
-  %%io_lib:format("mtp_handler      calc_health ~n"),
+  %%io:format("mtp_handler      calc_health ~n"),
     [{_, QLen}, {_, Mem}, {_, BinInfo}] =
         erlang:process_info(self(), [message_queue_len, memory, binary]),
     RefcBinSize = sum_binary(BinInfo),
@@ -618,13 +614,13 @@ calc_health() ->
       total_mem => TotalMem}.
 
 sum_binary(BinInfo) -> 
-  %%io_lib:format("mtp_handler      sum_binary ~n"),
+  %%io:format("mtp_handler      sum_binary ~n"),
     trunc(lists:foldl(fun({_, Size, RefC}, Sum) -> 
                               Sum + (Size / RefC)
                       end, 0, BinInfo)).
 
 hex(Bin) ->
-  %%io_lib:format("mtp_handler      hex ~n"),
+  %%io:format("mtp_handler      hex ~n"),
     <<begin
          if N < 10 ->
                  <<($0 + N)>>;
@@ -634,7 +630,7 @@ hex(Bin) ->
      end || <<N:4>> <= Bin>>.
 
 unhex(Chars) -> 
-  %%io_lib:format("mtp_handler      unhex ~n"),
+  %%io:format("mtp_handler      unhex ~n"),
     UnHChar = fun(C) when C < $W -> C - $0;
                  (C) when C > $W -> C - $W
               end,

@@ -156,7 +156,7 @@ handle_cast(shutdown, State) ->
     {stop, shutdown, State}.
 
 handle_info({tcp, Sock, Data}, #state{sock = Sock, dc_id = DcId} = S) ->
-    %%%%%no%%%%%io_lib:format("mtp_down_conn      handle_info 1 ~n"),
+    %%%%%no%%%%%io:format("mtp_down_conn      handle_info 1 ~n"),
     %%ok%% io:format("mtp_down_conn      handle_info 1 ~n ~p --- ~n~p~n",[byte_size(Data), Data]),
 
     mtp_metric:count_inc([?APP, received, downstream, bytes], byte_size(Data), #{labels => [DcId]}),
@@ -460,14 +460,14 @@ maybe_activate(#state{overflow_passive = true, sock = Sock, dc_id = Dc} = St) ->
             St
     end;
 maybe_activate(#state{} = St) ->
-    %%io_lib:format("mtp_down_conn      maybe_activate 2 ~n"),
+    %%io:format("mtp_down_conn      maybe_activate 2 ~n"),
     St.
 
 %% Reset counters for upstream that was terminated
 non_ack_cleanup_upstream(Upstream, #state{non_ack_count = Cnt,
                                           non_ack_bytes = Oct,
                                           upstreams = Ups} = St) ->
-    %%io_lib:format("mtp_down_conn      non_ack_cleanup_upstream ~n"),
+    %%io:format("mtp_down_conn      non_ack_cleanup_upstream ~n"),
     {_, UpsCnt, UpsOct} = maps:get(Upstream, Ups),
     maybe_activate(
       St#state{non_ack_count = Cnt - UpsCnt,
@@ -479,7 +479,7 @@ non_ack_cleanup_upstream(Upstream, #state{non_ack_count = Cnt,
 %%
 
 connect(DcId, S) ->
-    %%io_lib:format("mtp_down_conn      connect ~n"),
+    %%io:format("mtp_down_conn      connect ~n"),
     {ok, {Host, Port}} = mtp_config:get_netloc(DcId),
     case tcp_connect(Host, Port) of
         {ok, Sock} ->
@@ -496,7 +496,7 @@ connect(DcId, S) ->
     end.
 
 tcp_connect(Host, Port) ->
-    %%io_lib:format("mtp_down_conn      tcp_connect ~n"),
+    %%io:format("mtp_down_conn      tcp_connect ~n"),
     BufSize = application:get_env(?APP, downstream_socket_buffer_size,
                                   ?MAX_SOCK_BUF_SIZE),
     SockOpts = [{active, once},
@@ -514,7 +514,7 @@ tcp_connect(Host, Port) ->
     end.
 
 down_handshake1(S) ->
-    %%io_lib:format("mtp_down_conn      down_handshake1 ~n"),
+    %%io:format("mtp_down_conn      down_handshake1 ~n"),
     <<KeySelector:4/binary, _/binary>> = Key = mtp_config:get_secret(),
     CryptoTs = os:system_time(seconds),
     Nonce = crypto:strong_rand_bytes(16),
@@ -534,7 +534,7 @@ down_handshake1(S) ->
 down_handshake2(Pkt, #state{stage_state = {Deadline, MyKeySelector, CliNonce, MyTs, Key},
                             codec = Codec1,
                             sock = Sock} = S) ->
-    %%io_lib:format("mtp_down_conn      down_handshake2 ~n"),
+    %%io:format("mtp_down_conn      down_handshake2 ~n"),
     {nonce, KeySelector, Schema, _CryptoTs, SrvNonce} = mtp_rpc:decode_nonce(Pkt),
     (Schema == 1) orelse error({wrong_schema, Schema}),
     (KeySelector == MyKeySelector) orelse error({wrong_key_selector, KeySelector}),
@@ -559,7 +559,7 @@ down_handshake2(Pkt, #state{stage_state = {Deadline, MyKeySelector, CliNonce, My
 
 get_middle_key(#{srv_n := Nonce, clt_n := MyNonce, clt_ts := MyTs, srv_ip := SrvIpBinBig, srv_port := SrvPort,
                  clt_ip := CltIpBinBig, clt_port := CltPort, secret := Secret, purpose := Purpose} = _Args) ->
-    %%io_lib:format("mtp_down_conn      get_middle_key ~n"),
+    %%io:format("mtp_down_conn      get_middle_key ~n"),
     Msg =
         <<Nonce/binary,
           MyNonce/binary,
@@ -585,7 +585,7 @@ get_middle_key(#{srv_n := Nonce, clt_n := MyNonce, clt_ts := MyTs, srv_ip := Srv
 
 down_handshake3(Pkt, #state{stage_state = {Deadline, PrevSenderPid}, pool = Pool, dc_id = DcId,
                             netloc = {Addr, Port}} = S) ->
-    %%io_lib:format("mtp_down_conn      down_handshake3 ~n"),
+    %%io:format("mtp_down_conn      down_handshake3 ~n"),
     erlang:cancel_timer(Deadline),
     {handshake, _SenderPid, PeerPid} = mtp_rpc:decode_handshake(Pkt),
     (PeerPid == PrevSenderPid) orelse error({wrong_sender_pid, PeerPid}),
@@ -597,7 +597,7 @@ down_handshake3(Pkt, #state{stage_state = {Deadline, PrevSenderPid}, pool = Pool
 %% Internal
 
 get_external_ip(Sock) ->
-    %%io_lib:format("mtp_down_conn      get_external_ip ~n"),
+    %%io:format("mtp_down_conn      get_external_ip ~n"),
     {ok, {MyIp, MyPort}} = inet:sockname(Sock),
     case application:get_env(?APP, external_ip) of
         {ok, IpStr} ->
@@ -620,7 +620,7 @@ get_external_ip(Sock) ->
           129,108,183,6,27,38,93,178,18>>).
 
 middle_key_test() ->
-    %%io_lib:format("mtp_down_conn      middle_key_test ~n"),
+    %%io:format("mtp_down_conn      middle_key_test ~n"),
     Args = #{srv_port => 80,
              srv_ip => mtp_obfuscated:bin_rev(mtp_rpc:inet_pton({149, 154, 162, 38})),
              srv_n => <<247,40,210,56,65,12,101,170,216,155,14,253,250,238,219,226>>,

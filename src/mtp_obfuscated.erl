@@ -37,7 +37,7 @@
 
 -ifdef(TEST).
 client_create(Secret, Protocol, DcId) ->
-	%%io_lib:format("mtp_obfuscated      client_create 1 ~n"),
+	%%io:format("mtp_obfuscated      client_create 1 ~n"),
     client_create(crypto:strong_rand_bytes(58),
                   Secret, Protocol, DcId).
 
@@ -53,14 +53,14 @@ client_create(Secret, Protocol, DcId) ->
       DecIv :: binary(),
       CliCodec :: codec().
 client_create(Seed, HexSecret, Protocol, DcId) when byte_size(HexSecret) == 32 ->
-	%%io_lib:format("mtp_obfuscated      client_create 3 ~n"),
+	%%io:format("mtp_obfuscated      client_create 3 ~n"),
     client_create(Seed, mtp_handler:unhex(HexSecret), Protocol, DcId);
 client_create(Seed, Secret, Protocol, DcId) when byte_size(Seed) == 58,
                                           byte_size(Secret) == 16,
                                           DcId > -10,
                                           DcId < 10,
                                           is_atom(Protocol) ->
-	%%io_lib:format("mtp_obfuscated      client_create 4 ~n"),
+	%%io:format("mtp_obfuscated      client_create 4 ~n"),
     <<L:56/binary, R:2/binary>> = Seed,
     ProtocolBin = encode_protocol(Protocol),
     DcIdBin = encode_dc_id(DcId),
@@ -87,18 +87,18 @@ client_create(Seed, Secret, Protocol, DcId) when byte_size(Seed) == 58,
 
 %% 4byte
 encode_protocol(mtp_abridged) ->
-	%%io_lib:format("mtp_obfuscated      encode_protocol 1 ~n"),
+	%%io:format("mtp_obfuscated      encode_protocol 1 ~n"),
     <<16#ef, 16#ef, 16#ef, 16#ef>>;
 encode_protocol(mtp_intermediate) ->
-	%%io_lib:format("mtp_obfuscated      encode_protocol 2 ~n"),
+	%%io:format("mtp_obfuscated      encode_protocol 2 ~n"),
     <<16#ee, 16#ee, 16#ee, 16#ee>>;
 encode_protocol(mtp_secure) ->
-	%%io_lib:format("mtp_obfuscated      encode_protocol 3 ~n"),
+	%%io:format("mtp_obfuscated      encode_protocol 3 ~n"),
     <<16#dd, 16#dd, 16#dd, 16#dd>>.
 
 %% 4byte
 encode_dc_id(DcId) ->
-	%%io_lib:format("mtp_obfuscated      encode_dc_id  ~n"),
+	%%io:format("mtp_obfuscated      encode_dc_id  ~n"),
     <<DcId:16/signed-little-integer>>.
 -endif.
 
@@ -106,7 +106,7 @@ encode_dc_id(DcId) ->
 -spec from_header(binary(), binary()) -> {ok, integer(), mtp_codec:packet_codec(), codec()}
                                              | {error, unknown_protocol}.
 from_header(Header, Secret) when byte_size(Header) == 64  ->
-	%%io_lib:format("mtp_obfuscated      from_header  ~n"),
+	%%io:format("mtp_obfuscated      from_header  ~n"),
     %% 1) Encryption key
     %%     [--- _: 8b ----|---------- b: 48b -------------|-- _: 8b --] = header: 64b
     %% b_r: 48b = reverse([---------- b ------------------])
@@ -136,7 +136,7 @@ from_header(Header, Secret) when byte_size(Header) == 64  ->
     end.
 
 init_up_encrypt(Bin, Secret) ->
-	%%io_lib:format("mtp_obfuscated      init_up_encrypt  ~n"),
+	%%io:format("mtp_obfuscated      init_up_encrypt  ~n"),
     <<_:8/binary, ToRev:(?KEY_LEN + ?IV_LEN)/binary, _/binary>> = Bin,
     Rev = bin_rev(ToRev),
     <<KeySeed:?KEY_LEN/binary, IV:?IV_LEN/binary>> = Rev,
@@ -145,43 +145,43 @@ init_up_encrypt(Bin, Secret) ->
     {Key, IV}.
 
 init_up_decrypt(Bin, Secret) ->
-	%%io_lib:format("mtp_obfuscated      init_up_decrypt  ~n"),
+	%%io:format("mtp_obfuscated      init_up_decrypt  ~n"),
     <<_:8/binary, KeySeed:?KEY_LEN/binary, IV:?IV_LEN/binary, _/binary>> = Bin,
     Key = crypto:hash('sha256', <<KeySeed:?KEY_LEN/binary, Secret:16/binary>>),
     {Key, IV}.
 
 get_protocol(<<16#ef, 16#ef, 16#ef, 16#ef, _:2/binary>>) ->
-	%%io_lib:format("mtp_obfuscated      get_protocol1  ~n"),
+	%%io:format("mtp_obfuscated      get_protocol1  ~n"),
     mtp_abridged;
 get_protocol(<<16#ee, 16#ee, 16#ee, 16#ee, _:2/binary>>) ->
-	%%io_lib:format("mtp_obfuscated      get_protocol2  ~n"),
+	%%io:format("mtp_obfuscated      get_protocol2  ~n"),
     mtp_intermediate;
 get_protocol(<<16#dd, 16#dd, 16#dd, 16#dd, _:2/binary>>) ->
-	%%io_lib:format("mtp_obfuscated      get_protocol3  ~n"),
+	%%io:format("mtp_obfuscated      get_protocol3  ~n"),
     mtp_secure;
 get_protocol(_) ->
-	%%io_lib:format("mtp_obfuscated      get_protocol4  ~n"),
+	%%io:format("mtp_obfuscated      get_protocol4  ~n"),
     {error, unknown_protocol}.
 
 get_dc(<<_:4/binary, DcId:16/signed-little-integer>>) ->
-	%%io_lib:format("mtp_obfuscated      get_dc  ~n"),
+	%%io:format("mtp_obfuscated      get_dc  ~n"),
     DcId.
 
 
 new(EncKey, EncIV, DecKey, DecIV) ->
-	%%io_lib:format("mtp_obfuscated      new  ~n"),
+	%%io:format("mtp_obfuscated      new  ~n"),
     #st{decrypt = crypto:stream_init('aes_ctr', DecKey, DecIV),
         encrypt = crypto:stream_init('aes_ctr', EncKey, EncIV)}.
 
 -spec encrypt(iodata(), codec()) -> {binary(), codec()}.
 encrypt(Data, #st{encrypt = Enc} = St) ->
-	%%io_lib:format("mtp_obfuscated      encrypt1  ~n"),
+	%%io:format("mtp_obfuscated      encrypt1  ~n"),
     {Enc1, Encrypted} = crypto:stream_encrypt(Enc, Data),
     {Encrypted, St#st{encrypt = Enc1}}.
 
 -spec decrypt(iodata(), codec()) -> {binary(), binary(), codec()}.
 decrypt(Encrypted, #st{decrypt = Dec} = St) ->
-	%%io_lib:format("mtp_obfuscated      encrypt2  ~n"),
+	%%io:format("mtp_obfuscated      encrypt2  ~n"),
     {Dec1, Data} = crypto:stream_encrypt(Dec, Encrypted),
     {Data, <<>>, St#st{decrypt = Dec1}}.
 
@@ -189,19 +189,19 @@ decrypt(Encrypted, #st{decrypt = Dec} = St) ->
  {ok, Decoded :: binary(), Tail :: binary(), codec()}
                                                   | {incomplete, codec()}.
 try_decode_packet(Encrypted, St) ->
-	%%io_lib:format("mtp_obfuscated      try_decode_packet2  ~n"),
+	%%io:format("mtp_obfuscated      try_decode_packet2  ~n"),
     {Decrypted, Tail, St1} = decrypt(Encrypted, St),
     {ok, Decrypted, Tail, St1}.
 
 -spec encode_packet(iodata(), codec()) -> {iodata(), codec()}.
 encode_packet(Msg, S) ->
-	%%io_lib:format("mtp_obfuscated      encode_packet  ~n"),
+	%%io:format("mtp_obfuscated      encode_packet  ~n"),
     encrypt(Msg, S).
 
 
 %% Helpers
 bin_rev(Bin) ->
-	%%io_lib:format("mtp_obfuscated      bin_rev  ~n"),
+	%%io:format("mtp_obfuscated      bin_rev  ~n"),
     %% binary:encode_unsigned(binary:decode_unsigned(Bin, little)).
     list_to_binary(lists:reverse(binary_to_list(Bin))).
 
@@ -226,7 +226,7 @@ reverse_byte(Binary) ->
 -include_lib("eunit/include/eunit.hrl").
 
 client_server_test() ->
-	%%io_lib:format("mtp_obfuscated      client_server_test  ~n"),
+	%%io:format("mtp_obfuscated      client_server_test  ~n"),
     Secret = crypto:strong_rand_bytes(16),
     DcId = 4,
     Protocol = mtp_secure,
