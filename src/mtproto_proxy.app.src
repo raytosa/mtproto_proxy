@@ -19,15 +19,15 @@
         {listen_ip, "0.0.0.0"},
         %% You can add as much as you want. Names and ports should be unique
         {ports, [#{name => mtp_handler_1,
-                   port => 1443,
+                   port => 1444,
                    %% You can tell each port to listen on specific IP.
                    %% If not set, top-level listen_ip will be used.
                    %% listen_ip => "1.2.3.4",
 
                    %% secret should be 32 hex chars [0-9a-f]
-                   secret => <<"d0d6e111bada5511fcce9584deadbeef">>,
+                   secret => <<"0123456789abcdef0000111122223333">>,
                    %% tag is what you get from @MTProxybot
-                   tag => <<"dcbe8f1493fa4cd9ab300891c0b5b326">>}]},
+                   tag => <<"df23dbfefd25fae6b344b4d8abac8ece">>}]},
 
         %% number of socket acceptors (per-port)
         {num_acceptors, 60},

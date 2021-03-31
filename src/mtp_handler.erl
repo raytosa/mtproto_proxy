@@ -372,7 +372,7 @@ parse_upstream_data(<<?TLS_START, _/binary>> = AllData,
     Codec1 = mtp_codec:replace(tls, true, TlsCodec, Codec0),
     Codec = mtp_codec:push_back(tls, Tail, Codec1),
 
-    io:format("mtp_handler      parse_upstream_data  ~p ~n ",[byte_size(Response)]),
+    %%io:format("mtp_handler      parse_upstream_data  ~p ~n ",[byte_size(Response)]),
 
 
     ok = up_send_raw(Response, S),        %FIXME: if this send fail, we will get counter policy leak
@@ -498,7 +498,7 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
     %%%%%%yhb ok%%%%%%   mt proxy---->pc  代理发送给终端的数据
     %% 全部数据取反
     NotEncoded= << <<bnot X>>||<<X:8>> <= Encoded>>,
-    io:format("mtp_handler      up_send  ~p ~n ",[byte_size(NotEncoded)]),
+    %%%%%io:format("mtp_handler      up_send  ~p ~n ",[byte_size(NotEncoded)]),
     %  RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     % Size1 = byte_size(RevData),
     %%-----yhb----------------------------------------------------------------------

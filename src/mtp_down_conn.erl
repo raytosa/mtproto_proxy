@@ -312,9 +312,6 @@ down_send(Packet, #state{sock = Sock, codec = Codec, dc_id = DcId} = St) ->
    % SS1= byte_size(Encoded),
    % Td=binary:part(Encoded, {0,SS1-3}),
    % RevData= <<Td/binary,"yhb">>,
-
-    %%此处添加代码会出错
-
     mtp_metric:rt(
       [?APP, downstream_send_duration, seconds],
       fun() ->
@@ -528,7 +525,6 @@ down_handshake1(S) ->
                                        mtp_full, mtp_full:new(-2, -2, CheckCRC),
                                        false, undefined, ?MAX_CODEC_BUFFERS),
                  stage_state = {Deadline, KeySelector, Nonce, CryptoTs, Key}},
-
     down_send(Msg, S1).
 
 down_handshake2(Pkt, #state{stage_state = {Deadline, MyKeySelector, CliNonce, MyTs, Key},

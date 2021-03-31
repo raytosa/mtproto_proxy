@@ -26,6 +26,7 @@ start_conn(Pool, DcId) ->
     supervisor:start_child(?SERVER, [Pool, DcId]).
 
 init([]) ->
+
     SupFlags = #{strategy => simple_one_for_one,
                  intensity => 50,
                  period => 5},

@@ -169,7 +169,7 @@ codec_test() ->
                binary:copy(<<2>>, 100)          %padded
               ],
     lists:foldl(
-      fun(B, S1) -> 
+      fun(B, S1) ->
               {Encoded, S2} = encode_packet(B, S1),
               BinEncoded = iolist_to_binary(Encoded),
               {ok, Decoded, <<>>, S3} = try_decode_packet(BinEncoded, S2),
@@ -188,12 +188,12 @@ codec_stream_test() ->
               ],
     {Encoded, SS} =
         lists:foldl(
-          fun(B, {Enc1, S1}) -> 
+          fun(B, {Enc1, S1}) ->
                   {Enc2, S2} = encode_packet(B, S1),
                   {[Enc1 | Enc2], S2}
           end, {[], S}, Packets),
     lists:foldl(
-      fun(B, {Enc, S1}) -> 
+      fun(B, {Enc, S1}) ->
               {ok, Dec, Rest, S2} = try_decode_packet(Enc, S1),
               ?assertEqual(B, Dec),
               {Rest, S2}
