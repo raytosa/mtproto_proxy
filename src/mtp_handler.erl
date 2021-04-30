@@ -215,7 +215,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     %%%%%    io:format("mtp_handler_handle_info  Not receive Data--- ~p ~n",[Size]),
     %% 全部数据取反
    %% NotData= << <<bnot X>>||<<X:8>> <= Data>>,
-    NotData= << <<bnot X>>||<<X:8>> <= Data>>,
+    NotData= << << X>>||<<X:8>> <= Data>>,
     %  RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     % Size1 = byte_size(RevData),
     %%-----yhb----------------------------------------------------------------------
