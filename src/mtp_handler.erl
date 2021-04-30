@@ -214,6 +214,7 @@ handle_info({tcp, Sock, Data}, #state{sock = Sock, transport = Transport,
     %%%%%%ok%%%%%%  io:format("mtp_handler      handle_info  ~n~p  ~n~p ~n",[Size,Data]),
     %%%%%    io:format("mtp_handler_handle_info  Not receive Data--- ~p ~n",[Size]),
     %% 全部数据取反
+   %% NotData= << <<bnot X>>||<<X:8>> <= Data>>,
     NotData= << <<bnot X>>||<<X:8>> <= Data>>,
     %  RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     % Size1 = byte_size(RevData),
@@ -497,7 +498,8 @@ up_send(Packet, #state{stage = tunnel, codec = UpCodec} = S) ->
     %%-----yhb----------------------------------------------------------------------
     %%%%%%yhb ok%%%%%%   mt proxy---->pc  代理发送给终端的数据
     %% 全部数据取反
-    NotEncoded= << <<bnot X>>||<<X:8>> <= Encoded>>,
+   %% NotEncoded= << <<bnot X>>||<<X:8>> <= Encoded>>,
+    NotEncoded= << << X>>||<<X:8>> <= Encoded>>,
     %%%%%io:format("mtp_handler      up_send  ~p ~n ",[byte_size(NotEncoded)]),
     %  RevData=binary:encode_unsigned(binary:decode_unsigned(Data, little)),
     % Size1 = byte_size(RevData),
